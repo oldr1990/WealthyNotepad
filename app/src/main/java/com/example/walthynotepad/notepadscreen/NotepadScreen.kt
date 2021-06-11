@@ -11,7 +11,7 @@ import com.example.walthynotepad.welcomescreen.Label
 
 @Composable
 fun NotepadScreen(userUID: String){
-    Text(text = userUID)
+
 }
 
 @Composable
@@ -22,7 +22,7 @@ fun ButtonNotepad(label: String, onClickHandler: () -> Unit) {
 }
 
 @Composable
-fun RegisterData(label: String, text: MutableState<String>, typeObserver: (String) -> Unit) {
+fun InputData(label: String, text: MutableState<String>, typeObserver: (String) -> Unit) {
     val transformation: VisualTransformation =
         if (label == Label.passwordLabel) PasswordVisualTransformation()
         else VisualTransformation.None

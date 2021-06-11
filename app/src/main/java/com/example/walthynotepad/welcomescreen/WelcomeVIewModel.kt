@@ -34,7 +34,11 @@ class WelcomeVIewModel @ViewModelInject constructor(
                     }
                 }
             }
+            firebaseRepository.getUserUID().let {
+                if (it != null) LoginEvent.Success(it)
+            }
         }
+
     }
 
 
@@ -52,7 +56,6 @@ class WelcomeVIewModel @ViewModelInject constructor(
         viewModelScope.launch(dispatcher.io) {
             _loginFlow.value = LoginEvent.Loading
             firebaseRepository.registerUser(userdata)
-
         }
     }
 

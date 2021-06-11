@@ -16,8 +16,9 @@ interface FirebaseRepository {
     suspend fun loginUser (userdata: UserEntries)
     suspend fun checkLoginState():Boolean
     suspend fun logout():Boolean
-    suspend fun addNote(uid: String, note: Notes):Boolean
-    suspend fun deleteNote(uid: String,id: String):Boolean
-    suspend fun getNotes(uid: String):List<Notes>
+    suspend fun addNote(note: Notes)
+    suspend fun deleteNote(uid: String,id: String)
+    suspend fun getNotes()
+    suspend fun getUserUID():String?
 
 }
