@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.walthynotepad.data.UserEntries
+import com.example.walthynotepad.util.LoginEvent
 
 import java.util.regex.Pattern
 
@@ -32,20 +33,28 @@ object Label {
 fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
     val eventHandler = viewModel.loginFlow.collectAsState()
     eventHandler.value.let {
-        when (it){
-            is WelcomeVIewModel.LoginEvent.Success ->{
+        when (it) {
+            is LoginEvent.Success -> {
                 navController.navigate("notepad_screen/${it.resultText}")
             }
-            is WelcomeVIewModel.LoginEvent.Empty->{Log.e("!@#", "Empty!")}
-            is WelcomeVIewModel.LoginEvent.Loading->{Log.e("!@#", "Loading!")}
-            is WelcomeVIewModel.LoginEvent.Failure->{Log.e("!@#", "Failure! ${it.errorText}")}
+            is LoginEvent.Empty -> {
+                Log.e("!@#", "Empty!")
+            }
+            is LoginEvent.Loading -> {
+                Log.e("!@#", "Loading!")
+            }
+            is LoginEvent.Failure -> {
+                Log.e("!@#", "Failure! ${it.errorText}")
+            }
         }
     }
 
     val email = rememberSaveable { mutableStateOf("") }
     val password = rememberSaveable { mutableStateOf("") }
+
     val emailLambda: (String) -> Unit = { it -> email.value = it }
     val passwordLambda: (String) -> Unit = { it -> password.value = it }
+
     val registerClickListener: () -> Unit = {
         if (isItEmail(email.value)) {
             if (password.value.length in 4..10) {
@@ -75,7 +84,6 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(15.dp)
             ) {
-                
                 TopLabel(Label.login)
                 RegisterData(Label.emailLabel, text = email, emailLambda)
                 RegisterData(Label.passwordLabel, text = password, passwordLambda)

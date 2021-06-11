@@ -94,14 +94,14 @@ class DefaultFirebaseRepository @Inject constructor(
                 note.userUID = auth.currentUser?.uid.toString()
                 firestore.add(note)
                     .addOnSuccessListener {
-                        notepadCallBack.value = NotesResource.SuccessAdd()
+                        _notepadCallBack.value = NotesResource.SuccessAdd()
                     }
                     .addOnFailureListener {
-                        notepadCallBack.value = NotesResource.Error(it.message.toString())
+                        _notepadCallBack.value = NotesResource.Error(it.message.toString())
                     }
             } else  throw Exception("You are not authorized!")
         } catch (e: Exception) {
-            notepadCallBack.value = NotesResource.Error(e.message.toString())
+            _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
     }
 
@@ -113,13 +113,13 @@ class DefaultFirebaseRepository @Inject constructor(
         try{
             if (auth.currentUser != null){
                 firestore.get().addOnSuccessListener {
-                   notepadCallBack.value = NotesResource.Success(it.toObjects(Notes::class.java))
+                   _notepadCallBack.value = NotesResource.Success(it.toObjects(Notes::class.java))
                 }
             }
             else throw Exception("You are not authorized!")
         }
         catch (e:Exception){
-            notepadCallBack.value = NotesResource.Error(e.message.toString())
+            _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
     }
 

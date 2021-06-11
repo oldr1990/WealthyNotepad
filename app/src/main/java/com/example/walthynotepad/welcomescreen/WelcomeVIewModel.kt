@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.walthynotepad.data.UserEntries
 import com.example.walthynotepad.repository.FirebaseRepository
 import com.example.walthynotepad.util.DispatcherProvider
+import com.example.walthynotepad.util.LoginEvent
 import com.example.walthynotepad.util.LoginResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,12 +43,6 @@ class WelcomeVIewModel @ViewModelInject constructor(
     }
 
 
-    sealed class LoginEvent {
-        class Success(val resultText: String) : LoginEvent()
-        class Failure(val errorText: String) : LoginEvent()
-        object Loading : LoginEvent()
-        object Empty : LoginEvent()
-    }
 
     private val _loginFlow = MutableStateFlow<LoginEvent>(LoginEvent.Empty)
     val loginFlow: StateFlow<LoginEvent> = _loginFlow

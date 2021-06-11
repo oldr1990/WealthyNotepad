@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.example.walthynotepad.notepadscreen.NotepadScreen
+import com.example.walthynotepad.notepadscreen.NotepadViewModel
 import com.example.walthynotepad.ui.theme.WalthyNotepadTheme
 import com.example.walthynotepad.welcomescreen.WelcomeScreen
 import com.example.walthynotepad.welcomescreen.WelcomeVIewModel
@@ -23,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: WelcomeVIewModel by viewModels()
+    private val noteViewModel: NotepadViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -42,11 +44,13 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument("userUID") { type = NavType.StringType })
                         ) {
                             val userUID = remember { it.arguments?.getString("userUID") }
-                            NotepadScreen(userUID = userUID.toString())
+                            NotepadScreen(
+                                userUID = userUID.toString(),
+                                noteViewModel,
+                                navController
+                            )
                         }
-
                     }
-
                 }
             }
         }
