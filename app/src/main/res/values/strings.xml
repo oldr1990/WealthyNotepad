@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">WalthyNotepad</string>
+    <string name="login_top_string">LogIn/Register</string>
+</resources>
