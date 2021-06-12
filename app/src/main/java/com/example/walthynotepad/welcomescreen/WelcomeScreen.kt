@@ -70,7 +70,18 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
         }
     }
     val loginClickListener: () -> Unit = {
-        Log.e("!@#", "Login* Email: ${email.value}  Password: ${password.value}")
+        if (isItEmail(email.value)) {
+            if (password.value.length in 4..10) {
+                viewModel.login(
+                    UserEntries(
+                        email = email.value,
+                        password = password.value,
+                    )
+                )
+            }
+        } else {
+            Log.e("!@#", Label.emailInvalid)
+        }
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Card(

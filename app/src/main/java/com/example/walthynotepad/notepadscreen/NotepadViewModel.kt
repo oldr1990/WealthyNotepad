@@ -25,14 +25,26 @@ class NotepadViewModel @ViewModelInject constructor(
 
     init {
         viewModelScope.launch(dispatcher.io)  {
-            uid = firebaseRepository.getUserUID()?: ""
-            firebaseRepository.notepadCallBack.collect {
-                when(it){
-                    is NotesResource.Success -> {_noteCallBack.value = NotepadEvent.Success(it.data?: listOf(Notes()))}
-                    is NotesResource.SuccessAdd -> {_noteCallBack.value = NotepadEvent.SuccessAddDelete("Added!")}
-                    is NotesResource.SuccessDelete -> {_noteCallBack.value = NotepadEvent.SuccessAddDelete("Deleted!")}
-                    is NotesResource.Error -> {_noteCallBack.value = NotepadEvent.Failure(it.toString())}
-                    is NotesResource.Empty -> {}
+            if (firebaseRepository.checkLoginState()) {
+                getNotes()
+                _noteCallBack.value = NotepadEvent.Loading
+                firebaseRepository.notepadCallBack.collect {
+                    when (it) {
+                        is NotesResource.Success -> {
+                            _noteCallBack.value = NotepadEvent.Success(it.data ?: listOf(Notes()))
+                        }
+                        is NotesResource.SuccessAdd -> {
+                            _noteCallBack.value = NotepadEvent.SuccessAddDelete("Added!")
+                        }
+                        is NotesResource.SuccessDelete -> {
+                            _noteCallBack.value = NotepadEvent.SuccessAddDelete("Deleted!")
+                        }
+                        is NotesResource.Error -> {
+                            _noteCallBack.value = NotepadEvent.Failure(it.toString())
+                        }
+                        is NotesResource.Empty -> {
+                        }
+                    }
                 }
             }
         }
