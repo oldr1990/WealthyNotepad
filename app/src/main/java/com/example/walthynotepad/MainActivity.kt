@@ -1,5 +1,6 @@
 package com.example.walthynotepad
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,8 +27,9 @@ class MainActivity : ComponentActivity() {
     private val viewModel: WelcomeVIewModel by viewModels()
     private val noteViewModel: NotepadViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
+        val bla = getSharedPreferences("Login Data", Context.MODE_PRIVATE)
+
         setContent {
             val navController = rememberNavController()
             WalthyNotepadTheme {

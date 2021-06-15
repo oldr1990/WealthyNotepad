@@ -20,12 +20,12 @@ class WelcomeVIewModel @ViewModelInject constructor(
 ) : ViewModel() {
 
     init {
+
         viewModelScope.launch(dispatcher.io) {
             firebaseRepository.authCallBack.collect {
                 when (it) {
                     is LoginResource.Success -> {
                         _loginFlow.value = LoginEvent.Success(it.data)
-                        Log.e("!@#", "Welcome View Model : " + it.data)
                     }
                     is LoginResource.Empty -> {
                         _loginFlow.value = LoginEvent.Empty
@@ -39,6 +39,9 @@ class WelcomeVIewModel @ViewModelInject constructor(
                 if (it != null) LoginEvent.Success(it)
             }
         }
+        if (firebaseRepository.checkLoginData()){
+            login(firebaseRepository.getLoginData())
+        }
 
     }
 
@@ -50,6 +53,7 @@ class WelcomeVIewModel @ViewModelInject constructor(
     fun register(userdata: UserEntries) {
         viewModelScope.launch(dispatcher.io) {
             _loginFlow.value = LoginEvent.Loading
+            firebaseRepository.setLoginData(userdata)
             firebaseRepository.registerUser(userdata)
         }
     }
@@ -57,6 +61,7 @@ class WelcomeVIewModel @ViewModelInject constructor(
     fun login(userdata: UserEntries) {
         viewModelScope.launch(dispatcher.io) {
             _loginFlow.value = LoginEvent.Loading
+            firebaseRepository.setLoginData(userdata)
             firebaseRepository.loginUser(userdata)
         }
     }

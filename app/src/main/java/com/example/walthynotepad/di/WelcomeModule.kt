@@ -1,34 +1,51 @@
 package com.example.walthynotepad.di
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.example.walthynotepad.data.FirebaseAuthAPI
 import com.example.walthynotepad.data.FirebaseFirestoreAPI
+import com.example.walthynotepad.data.SharedPreferencesAPI
 import com.example.walthynotepad.util.DispatcherProvider
 import com.example.walthynotepad.repository.DefaultFirebaseRepository
 import com.example.walthynotepad.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.android.qualifiers.ActivityContext
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
-@Module
+
 @InstallIn(ApplicationComponent::class)
+@Module
 object WelcomeModule {
 
     @Singleton
     @Provides
-    fun provideFirebaseFirestore():FirebaseFirestoreAPI =
-    object : FirebaseFirestoreAPI {
-        override fun getCollectionReference(): CollectionReference {
-            val firestore = FirebaseFirestore.getInstance()
-            return firestore.collection("notes")
+    fun provideFirebaseFirestore(): FirebaseFirestoreAPI =
+        object : FirebaseFirestoreAPI {
+            override fun getCollectionReference(): CollectionReference {
+                val firestore = FirebaseFirestore.getInstance()
+                return firestore.collection("notes")
+            }
+        }
+
+
+    @Provides
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferencesAPI {
+        return object : SharedPreferencesAPI {
+            override val sharedPreferences: SharedPreferences = context.getSharedPreferences("Login Data!", Context.MODE_PRIVATE)
+
         }
     }
+
 
     @Singleton
     @Provides
@@ -40,8 +57,12 @@ object WelcomeModule {
 
     @Singleton
     @Provides
-    fun provideFirebaseAuth(api: FirebaseAuthAPI, firestore: FirebaseFirestoreAPI): FirebaseRepository =
-        DefaultFirebaseRepository(api,firestore)
+    fun provideFirebaseAuth(
+        api: FirebaseAuthAPI,
+        firestore: FirebaseFirestoreAPI,
+        sharedPreferences: SharedPreferencesAPI
+    ): FirebaseRepository =
+        DefaultFirebaseRepository(api, firestore, sharedPreferences)
 
     @Singleton
     @Provides

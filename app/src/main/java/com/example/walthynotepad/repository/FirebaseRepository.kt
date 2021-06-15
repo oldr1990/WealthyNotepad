@@ -20,5 +20,7 @@ interface FirebaseRepository {
     suspend fun deleteNote(uid: String,id: String)
     suspend fun getNotes()
     suspend fun getUserUID():String?
-
+    fun getLoginData():UserEntries
+    fun setLoginData(userData: UserEntries)
+    fun checkLoginData():Boolean
 }

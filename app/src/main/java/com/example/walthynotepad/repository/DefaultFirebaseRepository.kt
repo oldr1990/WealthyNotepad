@@ -2,10 +2,7 @@ package com.example.walthynotepad.repository
 
 
 import android.util.Log
-import com.example.walthynotepad.data.FirebaseAuthAPI
-import com.example.walthynotepad.data.FirebaseFirestoreAPI
-import com.example.walthynotepad.data.Notes
-import com.example.walthynotepad.data.UserEntries
+import com.example.walthynotepad.data.*
 import com.example.walthynotepad.util.LoginResource
 import com.example.walthynotepad.util.NotesResource
 import kotlinx.coroutines.CoroutineScope
@@ -18,9 +15,11 @@ import kotlin.Exception
 
 class DefaultFirebaseRepository @Inject constructor(
     private val authApi: FirebaseAuthAPI,
-    private val firestoreAPI: FirebaseFirestoreAPI
+    private val firestoreAPI: FirebaseFirestoreAPI,
+    private val sharedPreferencesAPI: SharedPreferencesAPI
 ) :
     FirebaseRepository {
+    private val sharedPreferences = sharedPreferencesAPI.sharedPreferences
     private var auth = authApi.auth()
     private var firestore = firestoreAPI.getCollectionReference()
 
@@ -32,6 +31,7 @@ class DefaultFirebaseRepository @Inject constructor(
 
     override suspend fun registerUser(userdata: UserEntries) {
         try {
+
             CoroutineScope(Dispatchers.IO).launch {
                 auth.createUserWithEmailAndPassword(userdata.email, userdata.password)
                     .addOnCompleteListener {
@@ -89,7 +89,7 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     override suspend fun addNote(note: Notes) {
-        try{
+        try {
             if (auth.currentUser != null) {
                 note.userUID = auth.currentUser?.uid.toString()
                 firestore.add(note)
@@ -99,7 +99,7 @@ class DefaultFirebaseRepository @Inject constructor(
                     .addOnFailureListener {
                         _notepadCallBack.value = NotesResource.Error(it.message.toString())
                     }
-            } else  throw Exception("You are not authorized!")
+            } else throw Exception("You are not authorized!")
         } catch (e: Exception) {
             _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
@@ -110,21 +110,40 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     override suspend fun getNotes() {
-        try{
-            if (auth.currentUser != null){
+        try {
+            if (auth.currentUser != null) {
                 firestore.get().addOnSuccessListener {
-                   _notepadCallBack.value = NotesResource.Success(it.toObjects(Notes::class.java))
+                    _notepadCallBack.value = NotesResource.Success(it.toObjects(Notes::class.java))
                 }
-            }
-            else throw Exception("You are not authorized!")
-        }
-        catch (e:Exception){
+            } else throw Exception("You are not authorized!")
+        } catch (e: Exception) {
             _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
     }
 
     override suspend fun getUserUID(): String? {
         return auth.currentUser?.uid
+    }
+
+    override fun getLoginData(): UserEntries {
+        val email = sharedPreferences.getString("Email", null) ?: ""
+        val password = sharedPreferences.getString("Password", null) ?: ""
+        return UserEntries(email, password)
+    }
+
+    override fun setLoginData(userData: UserEntries) {
+        val editor = sharedPreferences.edit()
+        editor.apply {
+            putString("Email", userData.email)
+            putString("Password", userData.password)
+            apply()
+        }
+    }
+
+    override fun checkLoginData(): Boolean {
+        val getData = getLoginData()
+        if (getData.email == "" || getData.password == "") return false
+        return true
     }
 
 
