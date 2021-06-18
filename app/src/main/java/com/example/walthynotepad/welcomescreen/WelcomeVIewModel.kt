@@ -1,6 +1,6 @@
 package com.example.walthynotepad.welcomescreen
 
-import android.util.Log
+
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 
 class WelcomeVIewModel @ViewModelInject constructor(
     private val firebaseRepository: FirebaseRepository,

@@ -36,15 +36,12 @@ object WelcomeModule {
             }
         }
 
-
     @Provides
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferencesAPI {
         return object : SharedPreferencesAPI {
             override val sharedPreferences: SharedPreferences = context.getSharedPreferences(Constants.sharedPreferencesName, Context.MODE_PRIVATE)
-
         }
     }
-
 
     @Singleton
     @Provides

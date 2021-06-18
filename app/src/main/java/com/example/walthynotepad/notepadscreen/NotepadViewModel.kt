@@ -1,6 +1,7 @@
 package com.example.walthynotepad.notepadscreen
 
 
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,18 +15,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.lang.ref.PhantomReference
 
 class NotepadViewModel @ViewModelInject constructor(
     private val firebaseRepository: FirebaseRepository,
     private val dispatcher: DispatcherProvider
-):ViewModel() {
-   private var uid: String = String()
+) : ViewModel() {
 
-    private val _noteCallBack =  MutableStateFlow<NotepadEvent>(NotepadEvent.Empty)
-    val noteCallBack : StateFlow<NotepadEvent> = _noteCallBack
+    private var uid: String = String()
+    private val _listOfNotes = MutableStateFlow(listOf(Notes()))
+    private val _noteCallBack = MutableStateFlow<NotepadEvent>(NotepadEvent.Empty)
+
+    val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
+    val listOfNotes: StateFlow<List<Notes>> = _listOfNotes
 
     init {
-        viewModelScope.launch(dispatcher.io)  {
+
+        viewModelScope.launch(dispatcher.io) {
             if (firebaseRepository.checkLoginState()) {
                 uid = firebaseRepository.getUserUID().toString()
                 getNotes()
@@ -33,19 +39,25 @@ class NotepadViewModel @ViewModelInject constructor(
                 firebaseRepository.notepadCallBack.collect {
                     when (it) {
                         is NotesResource.Success -> {
-                            _noteCallBack.value = NotepadEvent.Success(it.data?.sortedByDescending { it.date } ?: listOf(Notes()))
+                            if (it.data != null) {
+                                val list = it.data.sortedByDescending { it.date }
+                                _listOfNotes.value = list
+                                _noteCallBack.value = NotepadEvent.Success(list)
+                            }
                         }
                         is NotesResource.SuccessAdd -> {
-                            _noteCallBack.value = NotepadEvent.SuccessAddDelete(Constants.addedLabel)
+                            _noteCallBack.value =
+                                NotepadEvent.SuccessAddDelete(Constants.addedLabel)
                         }
                         is NotesResource.SuccessDelete -> {
-                            _noteCallBack.value = NotepadEvent.SuccessAddDelete(Constants.deletedLabel)
+                            _noteCallBack.value =
+                                NotepadEvent.SuccessAddDelete(Constants.deletedLabel)
                         }
                         is NotesResource.Error -> {
                             _noteCallBack.value = NotepadEvent.Failure(it.toString())
+                            _noteCallBack.value = NotepadEvent.Empty
                         }
-                        is NotesResource.Empty -> {
-                        }
+                        is NotesResource.Empty -> {}
                     }
                 }
             }
@@ -53,20 +65,20 @@ class NotepadViewModel @ViewModelInject constructor(
         }
     }
 
-    fun addNote(note: Notes){
+    fun addNote(note: Notes) {
         viewModelScope.launch(dispatcher.io) {
             firebaseRepository.addNote(note)
         }
     }
 
-    fun deleteNote(note: Notes){
-        viewModelScope.launch(dispatcher.io)  {
+    fun deleteNote(note: Notes) {
+        viewModelScope.launch(dispatcher.io) {
             firebaseRepository.deleteNote(note)
         }
     }
 
-    fun getNotes(){
-        viewModelScope.launch(dispatcher.io)  {
+    private fun getNotes() {
+        viewModelScope.launch(dispatcher.io) {
             firebaseRepository.getNotes(uid)
         }
     }

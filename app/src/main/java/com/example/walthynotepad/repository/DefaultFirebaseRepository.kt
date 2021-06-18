@@ -1,13 +1,9 @@
 package com.example.walthynotepad.repository
 
-
-import android.app.DownloadManager
-import android.util.Log
 import com.example.walthynotepad.data.*
 import com.example.walthynotepad.util.DispatcherProvider
 import com.example.walthynotepad.util.LoginResource
 import com.example.walthynotepad.util.NotesResource
-import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +22,6 @@ class DefaultFirebaseRepository @Inject constructor(
     private val sharedPreferences = sharedPreferencesAPI.sharedPreferences
     private var auth = authApi.auth()
     private var firestore = firestoreAPI.getCollectionReference()
-
 
     private val _authCallBack = MutableStateFlow<LoginResource<Boolean>>(LoginResource.Empty())
     override val authCallBack: StateFlow<LoginResource<Boolean>> = _authCallBack
@@ -93,6 +88,7 @@ class DefaultFirebaseRepository @Inject constructor(
         try {
             if (auth.currentUser != null) {
                 note.userUID = auth.currentUser?.uid.toString()
+                //val imageUrl = imageUploader(note.img)
                 firestore.add(note)
                     .addOnSuccessListener {
                         _notepadCallBack.value = NotesResource.SuccessAdd()
@@ -106,6 +102,12 @@ class DefaultFirebaseRepository @Inject constructor(
         }
     }
 
+    private fun imageUploader(filename: String): String {
+    if (filename == Constants.emptyString)   return filename
+
+        return " "
+    }
+
     override suspend fun deleteNote(note: Notes) {
         firestore
             .whereEqualTo(Constants.firestoreFieldDate, note.date)
@@ -113,51 +115,56 @@ class DefaultFirebaseRepository @Inject constructor(
             .whereEqualTo(Constants.firestoreFieldText, note.text)
             .whereEqualTo(Constants.firestoreFieldUserID, note.userUID).get().addOnSuccessListener {
                 if (!it.isEmpty) {
-                    firestore.document(it.documents[0].id).delete()
+                    firestore.document(it.documents[0].id).delete().addOnSuccessListener {
+                        _notepadCallBack.value = NotesResource.SuccessDelete()
+                    }
+                        .addOnFailureListener {
+                            _notepadCallBack.value = NotesResource.Error(it.message.toString())
+                        }
                 } else _notepadCallBack.value = NotesResource.Error(Constants.errorNoteDidntFinded)
             }
     }
 
     override suspend fun getNotes(uid: String) {
-           firestore
-               .whereEqualTo(Constants.firestoreFieldUserID, uid)
-               .addSnapshotListener { snapshot, error ->
-                   error?.let {
-                       _notepadCallBack.value = NotesResource.Error(error.message.toString())
-                       return@addSnapshotListener                                                  //останавливает слушатель
-                   }
-                   if (snapshot != null) {
-                       _notepadCallBack.value = NotesResource.Success(snapshot.toObjects(Notes::class.java))
-                   }
-               }
+        firestore
+            .whereEqualTo(Constants.firestoreFieldUserID, uid)
+            .addSnapshotListener { snapshot, error ->
+                error?.let {
+                    _notepadCallBack.value = NotesResource.Error(error.message.toString())
+                    return@addSnapshotListener                                                  //останавливает слушатель
+                }
+                if (snapshot != null) {
+                    _notepadCallBack.value =
+                        NotesResource.Success(snapshot.toObjects(Notes::class.java))
+                }
+            }
 
-   }
+    }
 
 
+    override suspend fun getUserUID(): String? {
+        return auth.currentUser?.uid
+    }
 
-   override suspend fun getUserUID(): String? {
-       return auth.currentUser?.uid
-   }
+    override fun getLoginData(): UserEntries {
+        val email = sharedPreferences.getString(Constants.email, null) ?: ""
+        val password = sharedPreferences.getString(Constants.password, null) ?: ""
+        return UserEntries(email, password)
+    }
 
-   override fun getLoginData(): UserEntries {
-       val email = sharedPreferences.getString(Constants.email, null) ?: ""
-       val password = sharedPreferences.getString(Constants.password, null) ?: ""
-       return UserEntries(email, password)
-   }
+    override fun setLoginData(userData: UserEntries) {
+        sharedPreferences.edit().apply {
+            putString(Constants.email, userData.email)
+            putString(Constants.password, userData.password)
+            apply()
+        }
+    }
 
-   override fun setLoginData(userData: UserEntries) {
-       sharedPreferences.edit().apply {
-           putString(Constants.email, userData.email)
-           putString(Constants.password, userData.password)
-           apply()
-       }
-   }
-
-   override fun checkLoginData(): Boolean {
-       val getData = getLoginData()
-       if (getData.email == "" || getData.password == "") return false
-       return true
-   }
+    override fun checkLoginData(): Boolean {
+        val getData = getLoginData()
+        if (getData.email == "" || getData.password == "") return false
+        return true
+    }
 
 
 }

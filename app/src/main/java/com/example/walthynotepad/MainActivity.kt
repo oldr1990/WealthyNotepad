@@ -1,12 +1,13 @@
 package com.example.walthynotepad
 
-import android.app.AlertDialog
-import android.content.Context
+
+
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
@@ -24,11 +25,6 @@ import com.example.walthynotepad.ui.theme.WalthyNotepadTheme
 import com.example.walthynotepad.welcomescreen.WelcomeScreen
 import com.example.walthynotepad.welcomescreen.WelcomeVIewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.*
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -36,7 +32,6 @@ class MainActivity : ComponentActivity() {
     private val noteViewModel: NotepadViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val bla = getSharedPreferences("Login Data", Context.MODE_PRIVATE)
 
         setContent {
             val navController = rememberNavController()
@@ -64,8 +59,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
 
+
+    }
 }
 
 

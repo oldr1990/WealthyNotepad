@@ -6,6 +6,9 @@ object Constants {
     const val firestoreFieldDate = "date"
     const val firestoreFieldImgURL = "img"
     const val firestoreFieldText = "text"
+    const val firestoreImageDirectory = "image/"
+
+    const val imageSearchType = "image/*"
 
     const val errorNoteDidntFinded = "Запись не найдена!"
     const val errorYouAreNotAuthorized = "Вы не вошли в свой акаунт!"
@@ -18,6 +21,10 @@ object Constants {
     const val registrationLabel = "Регистрация!"
     const val loginRegisterLabel = "Войти / Зарегистрироваться"
     const val emptyString = ""
+    const val enterYourNote = "Введите текст вашей заметки"
+    const val addNoteLabel = "Добавить"
+    const val choseYourImage = "Добавить фото"
+    const val yourImage = "Ваше фото"
 
     const val dataFormatPattern = "HH : mm : ss \t\t dd / MM / yyyy "
 
