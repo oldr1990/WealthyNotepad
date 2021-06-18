@@ -32,7 +32,6 @@ import java.util.*
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    var doubleBackToExitPressedOnce = false
     private val viewModel: WelcomeVIewModel by viewModels()
     private val noteViewModel: NotepadViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +66,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    }
+}
 
 
 

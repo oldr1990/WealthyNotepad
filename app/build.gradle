@@ -47,6 +47,9 @@ android {
 }
 
 dependencies {
+    //placeholder
+    //implementation "com.google.accompanist:accompanist-placeholder-material:0.12.0"
+
     //navigation
    implementation "androidx.navigation:navigation-compose:2.4.0-alpha01"
 

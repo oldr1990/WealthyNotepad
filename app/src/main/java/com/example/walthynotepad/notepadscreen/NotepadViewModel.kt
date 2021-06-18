@@ -4,6 +4,7 @@ package com.example.walthynotepad.notepadscreen
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.walthynotepad.data.Constants
 import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.repository.FirebaseRepository
 import com.example.walthynotepad.util.DispatcherProvider
@@ -35,10 +36,10 @@ class NotepadViewModel @ViewModelInject constructor(
                             _noteCallBack.value = NotepadEvent.Success(it.data?.sortedByDescending { it.date } ?: listOf(Notes()))
                         }
                         is NotesResource.SuccessAdd -> {
-                            _noteCallBack.value = NotepadEvent.SuccessAddDelete("Added!")
+                            _noteCallBack.value = NotepadEvent.SuccessAddDelete(Constants.addedLabel)
                         }
                         is NotesResource.SuccessDelete -> {
-                            _noteCallBack.value = NotepadEvent.SuccessAddDelete("Deleted!")
+                            _noteCallBack.value = NotepadEvent.SuccessAddDelete(Constants.deletedLabel)
                         }
                         is NotesResource.Error -> {
                             _noteCallBack.value = NotepadEvent.Failure(it.toString())

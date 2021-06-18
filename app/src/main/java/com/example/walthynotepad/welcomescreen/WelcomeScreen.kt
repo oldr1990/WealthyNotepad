@@ -1,6 +1,7 @@
 package com.example.walthynotepad.welcomescreen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -8,49 +9,26 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.walthynotepad.data.Constants
 import com.example.walthynotepad.data.UserEntries
+import com.example.walthynotepad.ui.composes.LoadingCircle
 import com.example.walthynotepad.util.LoginEvent
 
 import java.util.regex.Pattern
 
 
-object Label {
-    const val emailLabel: String = "Email"
-    const val passwordLabel: String = "Password"
-    const val login = "LogIn / Register"
-    const val loginButton = "LogIn"
-    const val registration = "Registration"
-    const val emailInvalid = "Email is invalid! Please type correct email."
-}
-
-
 @Composable
 fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
     val eventHandler = viewModel.loginFlow.collectAsState()
-    eventHandler.value.let {
-        when (it) {
-            is LoginEvent.Success -> {
-                navController.navigate("notepad_screen/${it.uid}")
-            }
-            is LoginEvent.Empty -> {
-                Log.e("!@#", "Empty!")
-            }
-            is LoginEvent.Loading -> {
-                Log.e("!@#", "Loading!")
-            }
-            is LoginEvent.Failure -> {
-                Log.e("!@#", "Failure! ${it.errorText}")
-            }
-        }
-    }
-
     val email = rememberSaveable { mutableStateOf("") }
     val password = rememberSaveable { mutableStateOf("") }
+    val loading = rememberSaveable { mutableStateOf(false) }
 
     val emailLambda: (String) -> Unit = { it -> email.value = it }
     val passwordLambda: (String) -> Unit = { it -> password.value = it }
@@ -66,7 +44,7 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                 )
             }
         } else {
-            Log.e("!@#", Label.emailInvalid)
+            Log.e("!@#", Constants.errorInvalidEmail)
         }
     }
     val loginClickListener: () -> Unit = {
@@ -80,38 +58,64 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                 )
             }
         } else {
-            Log.e("!@#", Label.emailInvalid)
+            Log.e("!@#", Constants.errorInvalidEmail)
         }
     }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(1f)
-                .padding(15.dp),
-            shape = RoundedCornerShape(10.dp),
-            elevation = 5.dp,
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(15.dp)
-            ) {
-                TopLabel(Label.login)
-                RegisterData(Label.emailLabel, text = email, emailLambda)
-                RegisterData(Label.passwordLabel, text = password, passwordLambda)
-                Row(
-                    modifier = Modifier
-                        .padding(15.dp)
-                        .fillMaxWidth(1f),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    ButtonLogReg(label = Label.loginButton, loginClickListener)
-                    Spacer(modifier = Modifier.padding(15.dp))
-                    ButtonLogReg(label = Label.registration, registerClickListener)
-                }
+    
+    eventHandler.value.let {
+        when (it) {
+            is LoginEvent.Success -> {
+                loading.value = false
+                navController.navigate("notepad_screen/${it.uid}")
             }
+            is LoginEvent.Empty -> {
+                loading.value = false
+                Log.e("!@#", "Empty!")
+            }
+            is LoginEvent.Loading -> {
+             loading.value = true
 
+                Log.e("!@#", "Loading!")
+            }
+            is LoginEvent.Failure -> {
+                Toast.makeText(LocalContext.current, it.errorText, Toast.LENGTH_SHORT).show()
+                loading.value = false
+            }
         }
     }
+
+  Box {
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+          Card(
+              modifier = Modifier
+                  .fillMaxWidth(1f)
+                  .padding(15.dp),
+              shape = RoundedCornerShape(10.dp),
+              elevation = 5.dp,
+          ) {
+              Column(
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  modifier = Modifier.padding(15.dp)
+              ) {
+                  TopLabel(Constants.loginRegisterLabel)
+                  RegisterData(Constants.email, text = email, emailLambda)
+                  RegisterData(Constants.password, text = password, passwordLambda)
+                  Row(
+                      modifier = Modifier
+                          .padding(15.dp)
+                          .fillMaxWidth(1f),
+                      horizontalArrangement = Arrangement.End
+                  ) {
+                      ButtonLogReg(label = Constants.loginLabel, loginClickListener)
+                      Spacer(modifier = Modifier.padding(15.dp))
+                      ButtonLogReg(label = Constants.registrationLabel, registerClickListener)
+                  }
+              }
+
+          }
+      }
+      LoadingCircle(state = loading)
+  }
 }
 
 @Composable
@@ -122,7 +126,7 @@ fun TopLabel(text: String) {
 @Composable
 fun RegisterData(label: String, text: MutableState<String>, typeObserver: (String) -> Unit) {
     val transformation: VisualTransformation =
-        if (label == Label.passwordLabel) PasswordVisualTransformation()
+        if (label == Constants.password) PasswordVisualTransformation()
         else VisualTransformation.None
     OutlinedTextField(
         value = text.value,
@@ -153,3 +157,5 @@ fun isItEmail(toCheck: String): Boolean {
     )
     return emailCheckPattern.matcher(toCheck).matches()
 }
+
+
