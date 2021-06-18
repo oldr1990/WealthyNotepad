@@ -1,11 +1,13 @@
 package com.example.walthynotepad.repository
 
 
+import android.app.DownloadManager
 import android.util.Log
 import com.example.walthynotepad.data.*
 import com.example.walthynotepad.util.DispatcherProvider
 import com.example.walthynotepad.util.LoginResource
 import com.example.walthynotepad.util.NotesResource
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,42 +119,45 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     override suspend fun getNotes(uid: String) {
-        try {
-            if (auth.currentUser != null) {
-                firestore.whereEqualTo(Constants.firestoreFieldUserID, uid).get()
-                    .addOnSuccessListener {
-                        _notepadCallBack.value =
-                            NotesResource.Success(it.toObjects(Notes::class.java))
-                    }
-            } else throw Exception(Constants.errorYouAreNotAuthorized)
-        } catch (e: Exception) {
-            _notepadCallBack.value = NotesResource.Error(e.message.toString())
-        }
-    }
+           firestore
+               .whereEqualTo(Constants.firestoreFieldUserID, uid)
+               .addSnapshotListener { snapshot, error ->
+                   error?.let {
+                       _notepadCallBack.value = NotesResource.Error(error.message.toString())
+                       return@addSnapshotListener                                                  //останавливает слушатель
+                   }
+                   if (snapshot != null) {
+                       _notepadCallBack.value = NotesResource.Success(snapshot.toObjects(Notes::class.java))
+                   }
+               }
 
-    override suspend fun getUserUID(): String? {
-        return auth.currentUser?.uid
-    }
+   }
 
-    override fun getLoginData(): UserEntries {
-        val email = sharedPreferences.getString(Constants.email, null) ?: ""
-        val password = sharedPreferences.getString(Constants.password, null) ?: ""
-        return UserEntries(email, password)
-    }
 
-    override fun setLoginData(userData: UserEntries) {
-        sharedPreferences.edit().apply {
-            putString(Constants.email, userData.email)
-            putString(Constants.password, userData.password)
-            apply()
-        }
-    }
 
-    override fun checkLoginData(): Boolean {
-        val getData = getLoginData()
-        if (getData.email == "" || getData.password == "") return false
-        return true
-    }
+   override suspend fun getUserUID(): String? {
+       return auth.currentUser?.uid
+   }
+
+   override fun getLoginData(): UserEntries {
+       val email = sharedPreferences.getString(Constants.email, null) ?: ""
+       val password = sharedPreferences.getString(Constants.password, null) ?: ""
+       return UserEntries(email, password)
+   }
+
+   override fun setLoginData(userData: UserEntries) {
+       sharedPreferences.edit().apply {
+           putString(Constants.email, userData.email)
+           putString(Constants.password, userData.password)
+           apply()
+       }
+   }
+
+   override fun checkLoginData(): Boolean {
+       val getData = getLoginData()
+       if (getData.email == "" || getData.password == "") return false
+       return true
+   }
 
 
 }

@@ -32,7 +32,7 @@ class NotepadViewModel @ViewModelInject constructor(
                 firebaseRepository.notepadCallBack.collect {
                     when (it) {
                         is NotesResource.Success -> {
-                            _noteCallBack.value = NotepadEvent.Success(it.data ?: listOf(Notes()))
+                            _noteCallBack.value = NotepadEvent.Success(it.data?.sortedByDescending { it.date } ?: listOf(Notes()))
                         }
                         is NotesResource.SuccessAdd -> {
                             _noteCallBack.value = NotepadEvent.SuccessAddDelete("Added!")

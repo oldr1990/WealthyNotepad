@@ -4,24 +4,28 @@ package com.example.walthynotepad.notepadscreen
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.util.NotepadEvent
+import com.google.type.DateTime
+import okhttp3.internal.format
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -46,12 +50,20 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
             }
         }
     }
+
     val inputText = remember { mutableStateOf("") }
     val inputTextLambda: (String) -> Unit = { it -> inputText.value = it }
     val buttonAddNoteOnClickListener: () -> Unit = {
-        val note = Notes(LocalDateTime.now().toString(), inputText.value, "", userUID)
+        val dateTime = LocalDateTime.now()
+        val formattedDateTime: String =
+            dateTime.format(DateTimeFormatter.ofPattern("HH : mm : ss \t\t dd / MM / yyyy "))
+        val note = Notes(formattedDateTime, inputText.value, "", userUID)
         viewModel.addNote(note)
     }
+    val noteDeleteOnClickListener: (Notes) -> Unit = {
+        viewModel.deleteNote(it)
+    }
+
     LazyColumn(
         reverseLayout = true,
         modifier = Modifier
@@ -66,7 +78,8 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
                     .padding(5.dp, 10.dp, 5.dp, 5.dp)
                     .shadow(5.dp, shape = RoundedCornerShape(5.dp))
             ) {
-                Column(verticalArrangement = Arrangement.SpaceEvenly,
+                Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
                         .fillMaxWidth(1f)
                         .wrapContentHeight(CenterVertically)
@@ -95,7 +108,7 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
             }
         }
         items(list) {
-            NoteCardView(it)
+            NoteCardView(it, noteDeleteOnClickListener)
         }
     }
 }
@@ -121,42 +134,47 @@ fun InputData(label: String, text: MutableState<String>, typeObserver: (String) 
         label = { Text(text = label) },
         modifier = Modifier
             .fillMaxWidth(1f)
-            .padding(10.dp,5.dp,10.dp,5.dp)
+            .padding(10.dp, 5.dp, 10.dp, 5.dp)
             .width(IntrinsicSize.Min)
     )
 }
 
-@Composable
-fun ListOfNotes(list: List<Notes>) {
-    LazyColumn(
-        reverseLayout = true,
-        modifier = Modifier
-            .fillMaxWidth(1f)
-            .padding(15.dp, 0.dp, 15.dp, 15.dp)
-    ) {
-        item {
-
-        }
-        items(list) {
-            NoteCardView(it)
-        }
-    }
-}
 
 @Composable
-fun NoteCardView(it: Notes) {
+fun NoteCardView(it: Notes, deleteLambda: (Notes) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth(1f)
             .padding(5.dp),
         elevation = 5.dp
     ) {
-        Box(modifier = Modifier.padding(15.dp)) {
-            Column {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(1f)
+                .wrapContentHeight(CenterVertically)
+                .padding(15.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(1f)
+            ) {
+
                 Text(text = it.date)
-                Spacer(modifier = Modifier.padding(5.dp))
-                Text(text = it.text)
+                Icon(
+                    imageVector = Icons.Default.DeleteForever,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { deleteLambda(it) }
+                )
             }
+
+            Spacer(modifier = Modifier.padding(5.dp))
+            Text(text = it.text)
         }
+
+
     }
 }
