@@ -1,6 +1,6 @@
 package com.example.walthynotepad.notepadscreen
 
-import android.provider.ContactsContract
+
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +26,7 @@ class NotepadViewModel @ViewModelInject constructor(
     init {
         viewModelScope.launch(dispatcher.io)  {
             if (firebaseRepository.checkLoginState()) {
+                uid = firebaseRepository.getUserUID().toString()
                 getNotes()
                 _noteCallBack.value = NotepadEvent.Loading
                 firebaseRepository.notepadCallBack.collect {
@@ -47,6 +48,7 @@ class NotepadViewModel @ViewModelInject constructor(
                     }
                 }
             }
+
         }
     }
 
@@ -56,15 +58,15 @@ class NotepadViewModel @ViewModelInject constructor(
         }
     }
 
-    fun deleteNote( id: String){
+    fun deleteNote(note: Notes){
         viewModelScope.launch(dispatcher.io)  {
-            firebaseRepository.deleteNote(uid, id)
+            firebaseRepository.deleteNote(note)
         }
     }
 
     fun getNotes(){
         viewModelScope.launch(dispatcher.io)  {
-            firebaseRepository.getNotes()
+            firebaseRepository.getNotes(uid)
         }
     }
 }

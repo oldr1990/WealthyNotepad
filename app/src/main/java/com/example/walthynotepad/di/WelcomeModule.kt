@@ -2,6 +2,7 @@ package com.example.walthynotepad.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.walthynotepad.data.Constants
 import com.example.walthynotepad.data.FirebaseAuthAPI
 import com.example.walthynotepad.data.FirebaseFirestoreAPI
 import com.example.walthynotepad.data.SharedPreferencesAPI
@@ -11,12 +12,10 @@ import com.example.walthynotepad.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ApplicationComponent
-import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +32,7 @@ object WelcomeModule {
         object : FirebaseFirestoreAPI {
             override fun getCollectionReference(): CollectionReference {
                 val firestore = FirebaseFirestore.getInstance()
-                return firestore.collection("notes")
+                return firestore.collection(Constants.firestoreFieldNoteTable)
             }
         }
 
@@ -41,7 +40,7 @@ object WelcomeModule {
     @Provides
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferencesAPI {
         return object : SharedPreferencesAPI {
-            override val sharedPreferences: SharedPreferences = context.getSharedPreferences("Login Data!", Context.MODE_PRIVATE)
+            override val sharedPreferences: SharedPreferences = context.getSharedPreferences(Constants.sharedPreferencesName, Context.MODE_PRIVATE)
 
         }
     }
@@ -60,9 +59,10 @@ object WelcomeModule {
     fun provideFirebaseAuth(
         api: FirebaseAuthAPI,
         firestore: FirebaseFirestoreAPI,
-        sharedPreferences: SharedPreferencesAPI
+        sharedPreferences: SharedPreferencesAPI,
+        dispatcher: DispatcherProvider
     ): FirebaseRepository =
-        DefaultFirebaseRepository(api, firestore, sharedPreferences)
+        DefaultFirebaseRepository(api, firestore, sharedPreferences,dispatcher )
 
     @Singleton
     @Provides

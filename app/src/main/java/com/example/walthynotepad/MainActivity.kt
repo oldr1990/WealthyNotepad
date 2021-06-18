@@ -1,7 +1,10 @@
 package com.example.walthynotepad
 
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -21,9 +24,15 @@ import com.example.walthynotepad.ui.theme.WalthyNotepadTheme
 import com.example.walthynotepad.welcomescreen.WelcomeScreen
 import com.example.walthynotepad.welcomescreen.WelcomeVIewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.*
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    var doubleBackToExitPressedOnce = false
     private val viewModel: WelcomeVIewModel by viewModels()
     private val noteViewModel: NotepadViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +66,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
+
+    }
 
 
 

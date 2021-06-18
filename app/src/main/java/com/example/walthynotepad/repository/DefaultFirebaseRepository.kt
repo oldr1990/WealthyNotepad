@@ -3,6 +3,7 @@ package com.example.walthynotepad.repository
 
 import android.util.Log
 import com.example.walthynotepad.data.*
+import com.example.walthynotepad.util.DispatcherProvider
 import com.example.walthynotepad.util.LoginResource
 import com.example.walthynotepad.util.NotesResource
 import kotlinx.coroutines.CoroutineScope
@@ -16,64 +17,62 @@ import kotlin.Exception
 class DefaultFirebaseRepository @Inject constructor(
     private val authApi: FirebaseAuthAPI,
     private val firestoreAPI: FirebaseFirestoreAPI,
-    private val sharedPreferencesAPI: SharedPreferencesAPI
+    private val sharedPreferencesAPI: SharedPreferencesAPI,
+    private val dispatcher: DispatcherProvider
 ) :
     FirebaseRepository {
     private val sharedPreferences = sharedPreferencesAPI.sharedPreferences
     private var auth = authApi.auth()
     private var firestore = firestoreAPI.getCollectionReference()
 
-    override val _authCallBack = MutableStateFlow<LoginResource<Boolean>>(LoginResource.Empty())
+
+    private val _authCallBack = MutableStateFlow<LoginResource<Boolean>>(LoginResource.Empty())
     override val authCallBack: StateFlow<LoginResource<Boolean>> = _authCallBack
 
-    override val _notepadCallBack = MutableStateFlow<NotesResource<Notes>>(NotesResource.Empty())
+    private val _notepadCallBack = MutableStateFlow<NotesResource<Notes>>(NotesResource.Empty())
     override val notepadCallBack: MutableStateFlow<NotesResource<Notes>> = _notepadCallBack
 
     override suspend fun registerUser(userdata: UserEntries) {
         try {
-
-            CoroutineScope(Dispatchers.IO).launch {
+            CoroutineScope(dispatcher.io).launch {
                 auth.createUserWithEmailAndPassword(userdata.email, userdata.password)
                     .addOnCompleteListener {
                         if (it.isSuccessful) CoroutineScope(Dispatchers.IO).launch {
                             _authCallBack.value =
                                 LoginResource.Success(auth.currentUser?.uid ?: "Error!")
-                            Log.e(
-                                "!@#",
-                                "DefaultFirebaseRepository " + auth.currentUser?.uid ?: "Error!"
-                            )
                         }
                         else _authCallBack.value =
                             LoginResource.Error(it.exception?.message.toString())
-                        Log.e("!@#", "Register complete!}")
                     }
 
             }
 
         } catch (e: Exception) {
-            Log.e("!@#", "Exception:  ${e.message}")
+
             _authCallBack.value = LoginResource.Error(e.message.toString())
         }
     }
 
     override suspend fun loginUser(userdata: UserEntries) {
         try {
-            CoroutineScope(Dispatchers.IO).launch {
+            CoroutineScope(dispatcher.io).launch {
                 auth.signInWithEmailAndPassword(userdata.email, userdata.password)
                     .addOnCompleteListener {
                         if (it.isSuccessful) CoroutineScope(Dispatchers.IO).launch {
                             _authCallBack.value =
-                                LoginResource.Success(auth.currentUser?.uid ?: "Error!")
+                                LoginResource.Success(
+                                    auth.currentUser?.uid ?: Constants.errorYouAreNotAuthorized
+                                )
                         }
                         else _authCallBack.value =
                             LoginResource.Error(it.exception?.message.toString())
-                        Log.e("!@#", "Login complete!}")
+
                     }
 
             }
 
         } catch (e: Exception) {
-            Log.e("!@#", "Exception:  ${e.message}")
+
             _authCallBack.value = LoginResource.Error(e.message.toString())
         }
     }
@@ -99,23 +98,33 @@ class DefaultFirebaseRepository @Inject constructor(
                     .addOnFailureListener {
                         _notepadCallBack.value = NotesResource.Error(it.message.toString())
                     }
-            } else throw Exception("You are not authorized!")
+            } else throw Exception(Constants.errorYouAreNotAuthorized)
         } catch (e: Exception) {
             _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
     }
 
-    override suspend fun deleteNote(uid: String, id: String) {
-
+    override suspend fun deleteNote(note: Notes) {
+        firestore
+            .whereEqualTo(Constants.firestoreFieldDate, note.date)
+            .whereEqualTo(Constants.firestoreFieldImgURL, note.img)
+            .whereEqualTo(Constants.firestoreFieldText, note.text)
+            .whereEqualTo(Constants.firestoreFieldUserID, note.userUID).get().addOnSuccessListener {
+                if (!it.isEmpty) {
+                    firestore.document(it.documents[0].id).delete()
+                } else _notepadCallBack.value = NotesResource.Error(Constants.errorNoteDidntFinded)
+            }
     }
 
-    override suspend fun getNotes() {
+    override suspend fun getNotes(uid: String) {
         try {
             if (auth.currentUser != null) {
-                firestore.get().addOnSuccessListener {
-                    _notepadCallBack.value = NotesResource.Success(it.toObjects(Notes::class.java))
-                }
-            } else throw Exception("You are not authorized!")
+                firestore.whereEqualTo(Constants.firestoreFieldUserID, uid).get()
+                    .addOnSuccessListener {
+                        _notepadCallBack.value =
+                            NotesResource.Success(it.toObjects(Notes::class.java))
+                    }
+            } else throw Exception(Constants.errorYouAreNotAuthorized)
         } catch (e: Exception) {
             _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
@@ -126,16 +135,15 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     override fun getLoginData(): UserEntries {
-        val email = sharedPreferences.getString("Email", null) ?: ""
-        val password = sharedPreferences.getString("Password", null) ?: ""
+        val email = sharedPreferences.getString(Constants.email, null) ?: ""
+        val password = sharedPreferences.getString(Constants.password, null) ?: ""
         return UserEntries(email, password)
     }
 
     override fun setLoginData(userData: UserEntries) {
-        val editor = sharedPreferences.edit()
-        editor.apply {
-            putString("Email", userData.email)
-            putString("Password", userData.password)
+        sharedPreferences.edit().apply {
+            putString(Constants.email, userData.email)
+            putString(Constants.password, userData.password)
             apply()
         }
     }

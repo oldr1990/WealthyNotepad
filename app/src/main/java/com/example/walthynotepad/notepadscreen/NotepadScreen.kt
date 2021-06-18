@@ -2,6 +2,7 @@ package com.example.walthynotepad.notepadscreen
 
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
@@ -50,22 +52,54 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
         val note = Notes(LocalDateTime.now().toString(), inputText.value, "", userUID)
         viewModel.addNote(note)
     }
-    Column(verticalArrangement = Arrangement.Bottom) {
-        Card(
-            elevation = 5.dp, modifier = Modifier
-                .fillMaxHeight(0.15f)
-                .fillMaxWidth(1f)
-                .padding(15.dp,15.dp,15.dp, 0.dp)
-                .shadow(5.dp, shape = RoundedCornerShape(5.dp))
-        ) {
-            Row (verticalAlignment = Alignment.CenterVertically){
-                InputData(label = "Type your note here:", text = inputText, inputTextLambda)
-                ButtonNotepad(label = "Add note", buttonAddNoteOnClickListener)
+    LazyColumn(
+        reverseLayout = true,
+        modifier = Modifier
+            .fillMaxWidth(1f)
+            .padding(15.dp, 0.dp, 15.dp, 15.dp)
+    ) {
+        item {
+            Card(
+                elevation = 5.dp, modifier = Modifier
+                    .wrapContentHeight(CenterVertically)
+                    .fillMaxWidth(1f)
+                    .padding(5.dp, 10.dp, 5.dp, 5.dp)
+                    .shadow(5.dp, shape = RoundedCornerShape(5.dp))
+            ) {
+                Column(verticalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .wrapContentHeight(CenterVertically)
+                )
+                {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .wrapContentHeight(CenterVertically)
+                    ) {
+                        InputData(label = "Type your note here:", text = inputText, inputTextLambda)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .wrapContentHeight(CenterVertically)
+                            .padding(5.dp)
+                    ) {
+                        ButtonNotepad(label = "Add note", buttonAddNoteOnClickListener)
+                    }
+                }
             }
         }
-        ListOfNotes(list = list)
+        items(list) {
+            NoteCardView(it)
+        }
     }
 }
+
 
 @Composable
 fun ButtonNotepad(label: String, onClickHandler: () -> Unit) {
@@ -85,17 +119,24 @@ fun InputData(label: String, text: MutableState<String>, typeObserver: (String) 
         onValueChange = typeObserver,
         singleLine = true,
         label = { Text(text = label) },
-        modifier = Modifier.padding(5.dp).width(IntrinsicSize.Min)
+        modifier = Modifier
+            .fillMaxWidth(1f)
+            .padding(10.dp,5.dp,10.dp,5.dp)
+            .width(IntrinsicSize.Min)
     )
 }
 
 @Composable
 fun ListOfNotes(list: List<Notes>) {
     LazyColumn(
+        reverseLayout = true,
         modifier = Modifier
             .fillMaxWidth(1f)
-            .padding(15.dp,0.dp,15.dp,15.dp)
+            .padding(15.dp, 0.dp, 15.dp, 15.dp)
     ) {
+        item {
+
+        }
         items(list) {
             NoteCardView(it)
         }

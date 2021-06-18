@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.walthynotepad.data.Constants
 import com.example.walthynotepad.data.UserEntries
 import com.example.walthynotepad.repository.FirebaseRepository
 import com.example.walthynotepad.util.DispatcherProvider
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import okhttp3.internal.wait
 
 class WelcomeVIewModel @ViewModelInject constructor(
     private val firebaseRepository: FirebaseRepository,
@@ -20,8 +22,12 @@ class WelcomeVIewModel @ViewModelInject constructor(
 ) : ViewModel() {
 
     init {
-
         viewModelScope.launch(dispatcher.io) {
+            if (firebaseRepository.checkLoginData()) {
+                val data = firebaseRepository.getLoginData()
+                if (data.password != Constants.emptyString && data.email != Constants.emptyString)
+                    login(data)
+            }
             firebaseRepository.authCallBack.collect {
                 when (it) {
                     is LoginResource.Success -> {
@@ -38,13 +44,11 @@ class WelcomeVIewModel @ViewModelInject constructor(
             firebaseRepository.getUserUID().let {
                 if (it != null) LoginEvent.Success(it)
             }
+
         }
-        if (firebaseRepository.checkLoginData()){
-            login(firebaseRepository.getLoginData())
-        }
+
 
     }
-
 
 
     private val _loginFlow = MutableStateFlow<LoginEvent>(LoginEvent.Empty)

@@ -35,7 +35,7 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
     eventHandler.value.let {
         when (it) {
             is LoginEvent.Success -> {
-                navController.navigate("notepad_screen/${it.resultText}")
+                navController.navigate("notepad_screen/${it.uid}")
             }
             is LoginEvent.Empty -> {
                 Log.e("!@#", "Empty!")
