@@ -1,14 +1,18 @@
 package com.example.walthynotepad.repository
 
+import androidx.core.net.toUri
 import com.example.walthynotepad.data.*
 import com.example.walthynotepad.util.DispatcherProvider
 import com.example.walthynotepad.util.LoginResource
 import com.example.walthynotepad.util.NotesResource
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.Exception
 
@@ -22,6 +26,8 @@ class DefaultFirebaseRepository @Inject constructor(
     private val sharedPreferences = sharedPreferencesAPI.sharedPreferences
     private var auth = authApi.auth()
     private var firestore = firestoreAPI.getCollectionReference()
+    private val storage = Firebase.storage
+    private val storageReference = storage.reference
 
     private val _authCallBack = MutableStateFlow<LoginResource<Boolean>>(LoginResource.Empty())
     override val authCallBack: StateFlow<LoginResource<Boolean>> = _authCallBack
@@ -88,7 +94,7 @@ class DefaultFirebaseRepository @Inject constructor(
         try {
             if (auth.currentUser != null) {
                 note.userUID = auth.currentUser?.uid.toString()
-                //val imageUrl = imageUploader(note.img)
+                note.img = imageUploader(note.img)
                 firestore.add(note)
                     .addOnSuccessListener {
                         _notepadCallBack.value = NotesResource.SuccessAdd()
@@ -102,27 +108,71 @@ class DefaultFirebaseRepository @Inject constructor(
         }
     }
 
-    private fun imageUploader(filename: String): String {
-    if (filename == Constants.emptyString)   return filename
+    private suspend fun imageUploader(filename: String): String {
+        var url = Constants.emptyString
+        if (filename == Constants.emptyString) return url
+        try {
+            val ref = storageReference
+                .child(Constants.firestoreImageDirectory + filename.hashCode().toString())
+            val uploadTask = ref.putFile(filename.toUri())
+            uploadTask.continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let {
+                        throw it
+                    }
+                }
+                ref.downloadUrl
+            }
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        url = task.result.toString()
+                    } else {
+                        _notepadCallBack.value = NotesResource.Error(Constants.errorImageUpload)
+                    }
+                }.await()
 
-        return " "
+        } catch (e: Exception) {
+            _notepadCallBack.value = NotesResource.Error(e.message.toString())
+            return url
+        }
+        return url
     }
 
     override suspend fun deleteNote(note: Notes) {
-        firestore
-            .whereEqualTo(Constants.firestoreFieldDate, note.date)
-            .whereEqualTo(Constants.firestoreFieldImgURL, note.img)
-            .whereEqualTo(Constants.firestoreFieldText, note.text)
-            .whereEqualTo(Constants.firestoreFieldUserID, note.userUID).get().addOnSuccessListener {
-                if (!it.isEmpty) {
-                    firestore.document(it.documents[0].id).delete().addOnSuccessListener {
-                        _notepadCallBack.value = NotesResource.SuccessDelete()
-                    }
-                        .addOnFailureListener {
-                            _notepadCallBack.value = NotesResource.Error(it.message.toString())
+        if (deleteImage(note.img))
+            firestore
+                .whereEqualTo(Constants.firestoreFieldDate, note.date)
+                .whereEqualTo(Constants.firestoreFieldImgURL, note.img)
+                .whereEqualTo(Constants.firestoreFieldText, note.text)
+                .whereEqualTo(Constants.firestoreFieldUserID, note.userUID).get()
+                .addOnSuccessListener {
+                    if (!it.isEmpty) {
+                        firestore.document(it.documents[0].id).delete().addOnSuccessListener {
+                            _notepadCallBack.value = NotesResource.SuccessDelete()
                         }
-                } else _notepadCallBack.value = NotesResource.Error(Constants.errorNoteDidntFinded)
+                            .addOnFailureListener {
+                                _notepadCallBack.value =
+                                    NotesResource.Error(it.message.toString())
+                            }
+                    } else _notepadCallBack.value =
+                        NotesResource.Error(Constants.errorNoteDidntFinded)
+                }
+    }
+
+    private suspend fun deleteImage(url: String): Boolean {
+        if (url == Constants.emptyString) return true
+        var isDeleted = false
+        val imageReference = storage.getReferenceFromUrl(url)
+        try {
+            imageReference.delete().addOnCompleteListener {
+                if (it.isSuccessful) isDeleted = true
             }
+                .await()
+        } catch (e: Exception) {
+            isDeleted = false
+            _notepadCallBack.value = NotesResource.Error(e.message.toString())
+        }
+        return isDeleted
     }
 
     override suspend fun getNotes(uid: String) {

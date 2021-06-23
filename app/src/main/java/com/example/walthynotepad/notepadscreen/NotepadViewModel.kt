@@ -40,7 +40,7 @@ class NotepadViewModel @ViewModelInject constructor(
                     when (it) {
                         is NotesResource.Success -> {
                             if (it.data != null) {
-                                val list = it.data.sortedByDescending { it.date }
+                                val list = it.data.sortedBy{ it.date.reversed() }
                                 _listOfNotes.value = list
                                 _noteCallBack.value = NotepadEvent.Success(list)
                             }
@@ -67,12 +67,14 @@ class NotepadViewModel @ViewModelInject constructor(
 
     fun addNote(note: Notes) {
         viewModelScope.launch(dispatcher.io) {
+            _noteCallBack.value = NotepadEvent.Loading
             firebaseRepository.addNote(note)
         }
     }
 
     fun deleteNote(note: Notes) {
         viewModelScope.launch(dispatcher.io) {
+            _noteCallBack.value = NotepadEvent.Loading
             firebaseRepository.deleteNote(note)
         }
     }

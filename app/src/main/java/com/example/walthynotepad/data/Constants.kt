@@ -13,6 +13,7 @@ object Constants {
     const val errorNoteDidntFinded = "Запись не найдена!"
     const val errorYouAreNotAuthorized = "Вы не вошли в свой акаунт!"
     const val errorInvalidEmail = "Не верный электронный адресс!"
+    const val errorImageUpload = "Ошибка при попытке загрузки фото!"
 
     const val sharedPreferencesName = "Login Data!"
     const val email = "Электронная почта"
@@ -30,4 +31,6 @@ object Constants {
 
     const val addedLabel = "Запись успушно добавлена!"
     const val deletedLabel = "Запись успушно удалена!"
+
+    const val maxImageDownloadSize = 5L*1024*1024
 }

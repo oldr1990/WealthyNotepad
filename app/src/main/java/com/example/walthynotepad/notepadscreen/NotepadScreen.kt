@@ -47,7 +47,7 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
         val dateTime = LocalDateTime.now()
         val formattedDateTime: String =
             dateTime.format(DateTimeFormatter.ofPattern(Constants.dataFormatPattern))
-        val note = Notes(formattedDateTime, inputText.value, imageUri.toString(), userUID)
+        val note = Notes(formattedDateTime, inputText.value, imageUri.value.toString(), userUID)
         viewModel.addNote(note)
     }
     val noteDeleteOnClickListener: (Notes) -> Unit = {
@@ -132,7 +132,7 @@ fun EditorCard(
             if (imgUri.value != Uri.EMPTY) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = CenterVertically,
                     modifier = Modifier.fillMaxWidth(1f)
                 ) {
 
