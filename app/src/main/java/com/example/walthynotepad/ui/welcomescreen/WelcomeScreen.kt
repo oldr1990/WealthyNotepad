@@ -43,8 +43,6 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                     )
                 )
             }
-        } else {
-            Log.e("!@#", Constants.ERROR_INVALID_EMAIL)
         }
     }
     val loginClickListener: () -> Unit = {
@@ -61,7 +59,7 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
             Log.e("!@#", Constants.ERROR_INVALID_EMAIL)
         }
     }
-    
+
     eventHandler.value.let {
         when (it) {
             is LoginEvent.Success -> {
@@ -70,12 +68,9 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
             }
             is LoginEvent.Empty -> {
                 loading.value = false
-                Log.e("!@#", "Empty!")
             }
             is LoginEvent.Loading -> {
-             loading.value = true
-
-                Log.e("!@#", "Loading!")
+                loading.value = true
             }
             is LoginEvent.Failure -> {
                 Toast.makeText(LocalContext.current, it.errorText, Toast.LENGTH_SHORT).show()
@@ -84,38 +79,38 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
         }
     }
 
-  Box {
-      Column(horizontalAlignment = Alignment.CenterHorizontally) {
-          Card(
-              modifier = Modifier
-                  .fillMaxWidth(1f)
-                  .padding(15.dp),
-              shape = RoundedCornerShape(10.dp),
-              elevation = 5.dp,
-          ) {
-              Column(
-                  horizontalAlignment = Alignment.CenterHorizontally,
-                  modifier = Modifier.padding(15.dp)
-              ) {
-                  TopLabel(Constants.LOGIN_REGISTER_LABEL)
-                  RegisterData(Constants.EMAIL_LABEL, text = email, emailLambda)
-                  RegisterData(Constants.PASSWORD_LABEL, text = password, passwordLambda)
-                  Row(
-                      modifier = Modifier
-                          .padding(15.dp)
-                          .fillMaxWidth(1f),
-                      horizontalArrangement = Arrangement.End
-                  ) {
-                      ButtonLogReg(label = Constants.LOGIN_LABEL, loginClickListener)
-                      Spacer(modifier = Modifier.padding(15.dp))
-                      ButtonLogReg(label = Constants.REGISTRATION_LABEL, registerClickListener)
-                  }
-              }
+    Box {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(1f)
+                    .padding(15.dp),
+                shape = RoundedCornerShape(10.dp),
+                elevation = 5.dp,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(15.dp)
+                ) {
+                    TopLabel(Constants.LOGIN_REGISTER_LABEL)
+                    RegisterData(Constants.EMAIL_LABEL, text = email, emailLambda)
+                    RegisterData(Constants.PASSWORD_LABEL, text = password, passwordLambda)
+                    Row(
+                        modifier = Modifier
+                            .padding(15.dp)
+                            .fillMaxWidth(1f),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        ButtonLogReg(label = Constants.LOGIN_LABEL, loginClickListener)
+                        Spacer(modifier = Modifier.padding(15.dp))
+                        ButtonLogReg(label = Constants.REGISTRATION_LABEL, registerClickListener)
+                    }
+                }
 
-          }
-      }
-      LoadingCircle(state = loading)
-  }
+            }
+        }
+        LoadingCircle(state = loading)
+    }
 }
 
 @Composable

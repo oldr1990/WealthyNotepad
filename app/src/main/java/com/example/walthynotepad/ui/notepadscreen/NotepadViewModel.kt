@@ -1,6 +1,6 @@
 package com.example.walthynotepad.ui.notepadscreen
 
-
+import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,11 +35,11 @@ class NotepadViewModel @ViewModelInject constructor(
                 uid = firebaseRepository.getUserUID().toString()
                 getNotes()
                 _noteCallBack.value = NotepadEvent.Loading
-                firebaseRepository.notepadCallBack.collect {
-                    when (it) {
+                firebaseRepository.notepadCallBack.collect { response ->
+                    when (response) {
                         is NotesResource.Success -> {
-                            if (it.data != null) {
-                                val list = it.data.sortedBy{ it.date.reversed() }
+                            if (response.data != null) {
+                                val list = response.data.sortedBy{ it.date.reversed() }
                                 _listOfNotes.value = list
                                 _noteCallBack.value = NotepadEvent.Success(list)
                             }
@@ -53,14 +53,16 @@ class NotepadViewModel @ViewModelInject constructor(
                                 NotepadEvent.SuccessAddDelete(Constants.NOTE_DELETED_LABEL)
                         }
                         is NotesResource.Error -> {
-                            _noteCallBack.value = NotepadEvent.Failure(it.toString())
+                            _noteCallBack.value = NotepadEvent.Failure(response.toString())
                             _noteCallBack.value = NotepadEvent.Empty
                         }
                         is NotesResource.Empty -> {}
+                        is NotesResource.Logout -> {
+                            _noteCallBack.value = NotepadEvent.Logout
+                        }
                     }
                 }
             }
-
         }
     }
 
@@ -75,6 +77,13 @@ class NotepadViewModel @ViewModelInject constructor(
         viewModelScope.launch(dispatcher.io) {
             _noteCallBack.value = NotepadEvent.Loading
             firebaseRepository.deleteNote(note)
+        }
+    }
+
+    fun logout(){
+        viewModelScope.launch(dispatcher.io) {
+            _noteCallBack.value = NotepadEvent.Loading
+              firebaseRepository.logout()
         }
     }
 

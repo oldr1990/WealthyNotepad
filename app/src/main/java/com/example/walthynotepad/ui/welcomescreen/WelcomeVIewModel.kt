@@ -1,6 +1,7 @@
 package com.example.walthynotepad.ui.welcomescreen
 
 
+import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,6 +23,7 @@ class WelcomeVIewModel @ViewModelInject constructor(
 
     init {
         viewModelScope.launch(dispatcher.io) {
+            Log.e("!@#", "Welcome screen")
             if (firebaseRepository.checkLoginData()) {
                 val data = firebaseRepository.getLoginData()
                 if (data.password != Constants.EMPTY_STRING && data.email != Constants.EMPTY_STRING)

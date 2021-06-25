@@ -13,7 +13,7 @@ interface FirebaseRepository {
     suspend fun registerUser (userdata: UserEntries)
     suspend fun loginUser (userdata: UserEntries)
     suspend fun checkLoginState():Boolean
-    suspend fun logout():Boolean
+    suspend fun logout()
     suspend fun addNote(note: Notes)
     suspend fun deleteNote(note: Notes)
     suspend fun getNotes(uid: String)

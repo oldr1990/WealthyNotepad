@@ -2,6 +2,9 @@ package com.example.walthynotepad.repository
 
 import androidx.core.net.toUri
 import com.example.walthynotepad.data.*
+import com.example.walthynotepad.data.Constants.EMAIL_LABEL
+import com.example.walthynotepad.data.Constants.EMPTY_STRING
+import com.example.walthynotepad.data.Constants.PASSWORD_LABEL
 import com.example.walthynotepad.util.DispatcherProvider
 import com.example.walthynotepad.util.LoginResource
 import com.example.walthynotepad.util.NotesResource
@@ -69,11 +72,8 @@ class DefaultFirebaseRepository @Inject constructor(
                         }
                         else _authCallBack.value =
                             LoginResource.Error(it.exception?.message.toString())
-
                     }
-
             }
-
         } catch (e: Exception) {
 
             _authCallBack.value = LoginResource.Error(e.message.toString())
@@ -84,10 +84,17 @@ class DefaultFirebaseRepository @Inject constructor(
         return auth.currentUser != null
     }
 
-
-    override suspend fun logout(): Boolean {
+    override suspend fun logout() {
         auth.signOut()
-        return !checkLoginState()
+        if (!checkLoginState()) {
+            sharedPreferences.edit().apply {
+                this.putString(EMAIL_LABEL, EMPTY_STRING)
+                this.putString(PASSWORD_LABEL, EMPTY_STRING)
+                apply()
+            }
+            _authCallBack.value  = LoginResource.Empty()
+            _notepadCallBack.value = NotesResource.Logout()
+        }
     }
 
     override suspend fun addNote(note: Notes) {
@@ -109,8 +116,8 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     private suspend fun imageUploader(filename: String): String {
-        var url = Constants.EMPTY_STRING
-        if (filename == Constants.EMPTY_STRING) return url
+        var url = EMPTY_STRING
+        if (filename == EMPTY_STRING) return url
         try {
             val ref = storageReference
                 .child(Constants.FIRESTORE_IMAGE_DIRECTORY + filename.hashCode().toString())
@@ -127,7 +134,8 @@ class DefaultFirebaseRepository @Inject constructor(
                     if (task.isSuccessful) {
                         url = task.result.toString()
                     } else {
-                        _notepadCallBack.value = NotesResource.Error(Constants.ERROR_IMAGE_UPLOADING)
+                        _notepadCallBack.value =
+                            NotesResource.Error(Constants.ERROR_IMAGE_UPLOADING)
                     }
                 }.await()
 
@@ -150,9 +158,9 @@ class DefaultFirebaseRepository @Inject constructor(
                         firestore.document(it.documents[0].id).delete().addOnSuccessListener {
                             _notepadCallBack.value = NotesResource.SuccessDelete()
                         }
-                            .addOnFailureListener {
+                            .addOnFailureListener { e->
                                 _notepadCallBack.value =
-                                    NotesResource.Error(it.message.toString())
+                                    NotesResource.Error(e.message.toString())
                             }
                     } else _notepadCallBack.value =
                         NotesResource.Error(Constants.ERROR_NOTE_CANT_FIND_NOTE)
@@ -160,7 +168,7 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     private suspend fun deleteImage(url: String): Boolean {
-        if (url == Constants.EMPTY_STRING) return true
+        if (url == EMPTY_STRING) return true
         var isDeleted = false
         val imageReference = storage.getReferenceFromUrl(url)
         try {
@@ -197,15 +205,15 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     override fun getLoginData(): UserEntries {
-        val email = sharedPreferences.getString(Constants.EMAIL_LABEL, null) ?: ""
-        val password = sharedPreferences.getString(Constants.PASSWORD_LABEL, null) ?: ""
+        val email = sharedPreferences.getString(EMAIL_LABEL, null) ?: ""
+        val password = sharedPreferences.getString(PASSWORD_LABEL, null) ?: ""
         return UserEntries(email, password)
     }
 
     override fun setLoginData(userData: UserEntries) {
         sharedPreferences.edit().apply {
-            putString(Constants.EMAIL_LABEL, userData.email)
-            putString(Constants.PASSWORD_LABEL, userData.password)
+            putString(EMAIL_LABEL, userData.email)
+            putString(PASSWORD_LABEL, userData.password)
             apply()
         }
     }
