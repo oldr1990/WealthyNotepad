@@ -2,12 +2,9 @@ package com.example.walthynotepad
 
 
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
@@ -19,11 +16,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import com.example.walthynotepad.notepadscreen.NotepadScreen
-import com.example.walthynotepad.notepadscreen.NotepadViewModel
+import com.example.walthynotepad.ui.notepadscreen.NotepadScreen
+import com.example.walthynotepad.ui.notepadscreen.NotepadViewModel
 import com.example.walthynotepad.ui.theme.WalthyNotepadTheme
-import com.example.walthynotepad.welcomescreen.WelcomeScreen
-import com.example.walthynotepad.welcomescreen.WelcomeVIewModel
+import com.example.walthynotepad.ui.welcomescreen.WelcomeScreen
+import com.example.walthynotepad.ui.welcomescreen.WelcomeVIewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

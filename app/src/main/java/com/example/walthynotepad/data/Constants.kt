@@ -25,7 +25,9 @@ object Constants {
     const val enterYourNote = "Введите текст вашей заметки"
     const val addNoteLabel = "Добавить"
     const val choseYourImage = "Добавить фото"
+    const val changeYourImage = "Выбрать другое фото"
     const val yourImage = "Ваше фото"
+    const val TO_DELETE = "Удалить"
 
     const val dataFormatPattern = "HH : mm : ss \t\t dd / MM / yyyy "
 

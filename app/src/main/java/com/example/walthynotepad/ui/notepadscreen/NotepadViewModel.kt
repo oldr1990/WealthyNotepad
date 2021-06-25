@@ -1,7 +1,9 @@
-package com.example.walthynotepad.notepadscreen
+package com.example.walthynotepad.ui.notepadscreen
 
 
-import androidx.activity.compose.ManagedActivityResultLauncher
+import android.net.Uri
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.lang.ref.PhantomReference
+import java.net.URI
 
 class NotepadViewModel @ViewModelInject constructor(
     private val firebaseRepository: FirebaseRepository,
@@ -23,11 +25,12 @@ class NotepadViewModel @ViewModelInject constructor(
 ) : ViewModel() {
 
     private var uid: String = String()
-    private val _listOfNotes = MutableStateFlow(listOf(Notes()))
-    private val _noteCallBack = MutableStateFlow<NotepadEvent>(NotepadEvent.Empty)
 
-    val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
+    private val _listOfNotes = MutableStateFlow(listOf(Notes()))
     val listOfNotes: StateFlow<List<Notes>> = _listOfNotes
+
+    private val _noteCallBack = MutableStateFlow<NotepadEvent>(NotepadEvent.Empty)
+    val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
 
     init {
 

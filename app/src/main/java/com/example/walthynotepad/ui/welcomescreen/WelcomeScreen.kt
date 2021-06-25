@@ -1,4 +1,4 @@
-package com.example.walthynotepad.welcomescreen
+package com.example.walthynotepad.ui.welcomescreen
 
 import android.util.Log
 import android.widget.Toast
