@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomCenter
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
@@ -37,6 +38,7 @@ import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.ui.composes.LoadingCircle
 import com.example.walthynotepad.util.NotepadEvent
 import com.google.accompanist.coil.rememberCoilPainter
+import com.google.accompanist.imageloading.ImageLoadState
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -306,14 +308,23 @@ fun NoteCardView(note: Notes, deleteLambda: (Notes) -> Unit) {
                         .padding(10.dp)
                         .size(300.dp)
                 ) {
+                    val painter = rememberCoilPainter(request = note.img)
                     Image(
-                        painter = rememberCoilPainter(request = note.img),
+                        painter = painter,
                         contentDescription = Constants.YOUR_IMAGE_LABEL,
                         modifier = Modifier
                             .fillMaxWidth(1f)
                             .fillMaxHeight(1f),
                         contentScale = ContentScale.Crop,
                     )
+                    when(painter.loadState){
+                        is ImageLoadState.Loading -> {
+                            Box(modifier = Modifier.size(50.dp), contentAlignment = Center) {
+                                CircularProgressIndicator(modifier = Modifier.size(50.dp))
+                            }
+
+                        }
+                    }
                 }
                 Text(text = note.text)
             }
