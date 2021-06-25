@@ -19,6 +19,7 @@ import com.example.walthynotepad.data.Constants
 import com.example.walthynotepad.data.UserEntries
 import com.example.walthynotepad.ui.composes.LoadingCircle
 import com.example.walthynotepad.util.LoginEvent
+import com.example.walthynotepad.util.isItEmail
 
 import java.util.regex.Pattern
 
@@ -60,11 +61,11 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
         }
     }
 
-    eventHandler.value.let {
-        when (it) {
+    eventHandler.value.let { response ->
+        when (response) {
             is LoginEvent.Success -> {
                 loading.value = false
-                navController.navigate("notepad_screen/${it.uid}")
+                navController.navigate("notepad_screen/${response.uid}")
             }
             is LoginEvent.Empty -> {
                 loading.value = false
@@ -73,7 +74,7 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                 loading.value = true
             }
             is LoginEvent.Failure -> {
-                Toast.makeText(LocalContext.current, it.errorText, Toast.LENGTH_SHORT).show()
+                Toast.makeText(LocalContext.current, response.errorText, Toast.LENGTH_SHORT).show()
                 loading.value = false
             }
         }
@@ -140,17 +141,5 @@ fun ButtonLogReg(label: String, onClickHandler: () -> Unit) {
     }
 }
 
-fun isItEmail(toCheck: String): Boolean {
-    val emailCheckPattern = Pattern.compile(
-        "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
-                "\\@" +
-                "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
-                "(" +
-                "\\." +
-                "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
-                ")+"
-    )
-    return emailCheckPattern.matcher(toCheck).matches()
-}
 
 

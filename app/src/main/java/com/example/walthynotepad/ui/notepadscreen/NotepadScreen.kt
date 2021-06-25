@@ -1,14 +1,12 @@
 package com.example.walthynotepad.ui.notepadscreen
 
 
-import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,16 +14,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomCenter
-import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Alignment.Companion.TopEnd
@@ -48,12 +43,10 @@ import com.example.walthynotepad.data.Constants.IMAGE_SEARCH_TYPE
 import com.example.walthynotepad.data.Constants.NAVIGATION_WELCOME_SCREEN
 import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.ui.composes.LoadingCircle
-import com.example.walthynotepad.ui.theme.WalthyNotepadTheme
 import com.example.walthynotepad.util.NotepadEvent
 import com.example.walthynotepad.util.millisToDate
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.imageloading.ImageLoadState
-import kotlinx.coroutines.launch
 import com.example.walthynotepad.ui.notepadscreen.EditorCard as EditorCard1
 
 
@@ -77,7 +70,6 @@ fun Preview() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: NavController) {
-    val coroutineScope = rememberCoroutineScope()
     val imageUri = remember { mutableStateOf(Uri.EMPTY) }
     val eventHandler = viewModel.noteCallBack.collectAsState()
     var list by remember { mutableStateOf(listOf(Notes())) }
@@ -105,29 +97,33 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
         { imageReferenceResult.launch(IMAGE_SEARCH_TYPE) }
 
     eventHandler.value.let {
-        if (!viewModel.isHandled) {
-            viewModel.isHandled = true
-            list = viewModel.listOfNotes.value
+
+           list = viewModel.listOfNotes.value
             when (it) {
                 is NotepadEvent.Success -> {
-                    viewModel.isHandled = false
                     loadingState.value = false
                     list = it.notes
                     inputText.value = EMPTY_STRING
                     imageUri.value = Uri.EMPTY
                 }
                 is NotepadEvent.Empty -> {
-                    loadingState.value = false
                 }
                 is NotepadEvent.SuccessAddDelete -> {
-                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
-                    loadingState.value = false
+                    if (!viewModel.isHandled) {
+                        viewModel.isHandled = true
+                        Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
+                        loadingState.value = false
+                    }
                 }
                 is NotepadEvent.Failure -> {
-                    loadingState.value = false
-                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
+                    if (!viewModel.isHandled) {
+                        viewModel.isHandled = true
+                        loadingState.value = false
+                        Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
                 is NotepadEvent.Loading -> {
+                    viewModel.isHandled = false
                     loadingState.value = true
                 }
                 NotepadEvent.Logout -> {
@@ -135,16 +131,14 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
                     navController.navigate(NAVIGATION_WELCOME_SCREEN)
                 }
             }
-        }
+
     }
 
     Box(contentAlignment = BottomCenter) {
-        val listState = rememberLazyListState()
         LazyColumn(
-            state = listState,
             reverseLayout = true,
             modifier = Modifier
-                .fillMaxWidth(1f)
+                .fillMaxSize(1f)
                 .padding(15.dp, 0.dp, 15.dp, 15.dp)
         ) {
             item {
@@ -159,31 +153,6 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
             }
             items(list) {
                 NoteCardView(it, noteDeleteOnClickListener)
-            }
-        }
-        val showButton by remember {
-            derivedStateOf {
-                listState.firstVisibleItemIndex > 0
-            }
-        }
-
-        AnimatedVisibility(visible = showButton) {
-            Box( contentAlignment = BottomEnd,
-                modifier = Modifier
-                    .fillMaxSize(1F)
-                    .background(Color.Transparent)) {
-                FloatingActionButton(
-                    backgroundColor = MaterialTheme.colors.primary,
-                    onClick = {
-                    coroutineScope.launch { listState.animateScrollToItem(0) }
-                }, modifier = Modifier.padding(15.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDownward,
-                        contentDescription = "Down",
-                        tint = Color.White,
-                        modifier = Modifier.padding(15.dp)
-                    )
-                }
             }
         }
     }

@@ -1,12 +1,10 @@
 package com.example.walthynotepad.ui.notepadscreen
 
-import android.net.Uri
 import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.walthynotepad.data.Constants
-import com.example.walthynotepad.data.Constants.EMPTY_STRING
 import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.repository.FirebaseRepository
 import com.example.walthynotepad.util.DispatcherProvider
@@ -21,8 +19,6 @@ class NotepadViewModel @ViewModelInject constructor(
     private val firebaseRepository: FirebaseRepository,
     private val dispatcher: DispatcherProvider
 ) : ViewModel() {
-    var textHandler = EMPTY_STRING
-    var imageUriHandler = Uri.EMPTY
 
     private var uid: String = String()
 
@@ -95,8 +91,9 @@ class NotepadViewModel @ViewModelInject constructor(
         }
     }
 
-    private fun getNotes() {
+     fun getNotes() {
         viewModelScope.launch(dispatcher.io) {
+            _noteCallBack.value = NotepadEvent.Loading
             firebaseRepository.getNotes(uid)
         }
     }

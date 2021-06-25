@@ -10,12 +10,12 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/walthy_notepad_icon"
         android:supportsRtl="true"
-        android:theme="@style/Theme.WalthyNotepad">
+        android:theme="@style/LoadScreen">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.WalthyNotepad.NoActionBar">
+            android:theme="@style/LoadScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

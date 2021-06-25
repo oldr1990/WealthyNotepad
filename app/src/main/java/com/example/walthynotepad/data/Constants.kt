@@ -30,7 +30,7 @@ object Constants {
     const val CHOSE_YOUR_IMAGE_LABEL = "Добавить фото"
     const val CHANGE_YOUR_IMAGE_LABEL = "Выбрать другое фото"
     const val YOUR_IMAGE_LABEL = "Ваше фото"
-    const val DELETED_LABEL = "Удалено!"
+    const val DELETED_LABEL = "Вы вышли из акаута!"
     const val BACK_PRESSED_MESSAGE = "Для выхода нажмите назад еще раз"
 
 

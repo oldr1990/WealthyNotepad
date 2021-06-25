@@ -42,10 +42,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @ExperimentalAnimationApi
+
+    @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        setTheme(R.style.Theme_WalthyNotepad)
         setContent {
             val navController = rememberNavController()
             WalthyNotepadTheme {
