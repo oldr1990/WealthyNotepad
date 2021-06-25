@@ -1,10 +1,12 @@
 package com.example.walthynotepad.ui.notepadscreen
 
+import android.net.Uri
 import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.walthynotepad.data.Constants
+import com.example.walthynotepad.data.Constants.EMPTY_STRING
 import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.repository.FirebaseRepository
 import com.example.walthynotepad.util.DispatcherProvider
@@ -19,8 +21,12 @@ class NotepadViewModel @ViewModelInject constructor(
     private val firebaseRepository: FirebaseRepository,
     private val dispatcher: DispatcherProvider
 ) : ViewModel() {
+    var textHandler = EMPTY_STRING
+    var imageUriHandler = Uri.EMPTY
 
     private var uid: String = String()
+
+    var isHandled = false
 
     private val _listOfNotes = MutableStateFlow(listOf(Notes()))
     val listOfNotes: StateFlow<List<Notes>> = _listOfNotes
@@ -29,17 +35,18 @@ class NotepadViewModel @ViewModelInject constructor(
     val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
 
     init {
-
+        Log.e("!@#", "Notepad VIew model init")
         viewModelScope.launch(dispatcher.io) {
             if (firebaseRepository.checkLoginState()) {
                 uid = firebaseRepository.getUserUID().toString()
                 getNotes()
                 _noteCallBack.value = NotepadEvent.Loading
                 firebaseRepository.notepadCallBack.collect { response ->
+                    isHandled = false
                     when (response) {
                         is NotesResource.Success -> {
                             if (response.data != null) {
-                                val list = response.data.sortedBy{ it.date.reversed() }
+                                val list = response.data.sortedByDescending{ it.date }
                                 _listOfNotes.value = list
                                 _noteCallBack.value = NotepadEvent.Success(list)
                             }
@@ -53,6 +60,7 @@ class NotepadViewModel @ViewModelInject constructor(
                                 NotepadEvent.SuccessAddDelete(Constants.NOTE_DELETED_LABEL)
                         }
                         is NotesResource.Error -> {
+                            isHandled = false
                             _noteCallBack.value = NotepadEvent.Failure(response.toString())
                             _noteCallBack.value = NotepadEvent.Empty
                         }

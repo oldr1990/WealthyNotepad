@@ -1,26 +1,31 @@
 package com.example.walthynotepad.ui.notepadscreen
 
 
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomCenter
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Alignment.Companion.TopEnd
@@ -37,13 +42,18 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.example.walthynotepad.data.Constants
 import com.example.walthynotepad.data.Constants.DATE_FORMAT_PATTERN
+import com.example.walthynotepad.data.Constants.DELETED_LABEL
+import com.example.walthynotepad.data.Constants.EMPTY_STRING
+import com.example.walthynotepad.data.Constants.IMAGE_SEARCH_TYPE
 import com.example.walthynotepad.data.Constants.NAVIGATION_WELCOME_SCREEN
 import com.example.walthynotepad.data.Notes
 import com.example.walthynotepad.ui.composes.LoadingCircle
+import com.example.walthynotepad.ui.theme.WalthyNotepadTheme
 import com.example.walthynotepad.util.NotepadEvent
 import com.example.walthynotepad.util.millisToDate
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.imageloading.ImageLoadState
+import kotlinx.coroutines.launch
 import com.example.walthynotepad.ui.notepadscreen.EditorCard as EditorCard1
 
 
@@ -52,7 +62,7 @@ import com.example.walthynotepad.ui.notepadscreen.EditorCard as EditorCard1
 fun Preview() {
     val url: MutableState<Uri> =
         remember { mutableStateOf("https://firebasestorage.googleapis.com/v0/b/fir-notebook-24c3a.appspot.com/o/image%2F-518351845?alt=media&token=0a8208b8-72a1-49d7-968b-6fd050fb4694".toUri()) }
-    val inputText = remember { mutableStateOf(Constants.EMPTY_STRING) }
+    val inputText = remember { mutableStateOf(EMPTY_STRING) }
     EditorCard1(
         inputText = inputText,
         inputTextLambda = { },
@@ -63,19 +73,22 @@ fun Preview() {
     )
 }
 
+@ExperimentalAnimationApi
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: NavController) {
+    val coroutineScope = rememberCoroutineScope()
     val imageUri = remember { mutableStateOf(Uri.EMPTY) }
     val eventHandler = viewModel.noteCallBack.collectAsState()
     var list by remember { mutableStateOf(listOf(Notes())) }
-    val inputText = remember { mutableStateOf(Constants.EMPTY_STRING) }
+    val inputText = remember { mutableStateOf(EMPTY_STRING) }
     val loadingState = remember { mutableStateOf(false) }
-
-    val logoutOnClickListener: () -> Unit = {viewModel.logout() }
-    val inputTextLambda: (String) -> Unit = { it -> inputText.value = it }
+    val logoutOnClickListener: () -> Unit = { viewModel.logout() }
+    val inputTextLambda: (String) -> Unit = { text ->
+        inputText.value = text
+    }
     val buttonAddNoteOnClickListener: () -> Unit = {
-        if (inputText.value != Constants.EMPTY_STRING) {
+        if (inputText.value != EMPTY_STRING) {
             val formattedDateTime = System.currentTimeMillis().toString()
             val note = Notes(formattedDateTime, inputText.value, imageUri.value.toString(), userUID)
             viewModel.addNote(note)
@@ -89,38 +102,46 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
             imageUri.value = it
         }
     val addImageOnClickListener: () -> Unit =
-        { imageReferenceResult.launch(Constants.IMAGE_SEARCH_TYPE) }
+        { imageReferenceResult.launch(IMAGE_SEARCH_TYPE) }
 
     eventHandler.value.let {
-        list = viewModel.listOfNotes.value
-        when (it) {
-            is NotepadEvent.Success -> {
-                loadingState.value = false
-                list = it.notes
-                inputText.value = Constants.EMPTY_STRING
-                imageUri.value = Uri.EMPTY
-            }
-            is NotepadEvent.Empty -> {
-                loadingState.value = false
-            }
-            is NotepadEvent.SuccessAddDelete -> {
-                loadingState.value = false
-            }
-            is NotepadEvent.Failure -> {
-                loadingState.value = false
-                Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
-            }
-            is NotepadEvent.Loading -> {
-                loadingState.value = true
-            }
-            NotepadEvent.Logout -> {
-                navController.navigate(NAVIGATION_WELCOME_SCREEN)
+        if (!viewModel.isHandled) {
+            viewModel.isHandled = true
+            list = viewModel.listOfNotes.value
+            when (it) {
+                is NotepadEvent.Success -> {
+                    viewModel.isHandled = false
+                    loadingState.value = false
+                    list = it.notes
+                    inputText.value = EMPTY_STRING
+                    imageUri.value = Uri.EMPTY
+                }
+                is NotepadEvent.Empty -> {
+                    loadingState.value = false
+                }
+                is NotepadEvent.SuccessAddDelete -> {
+                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
+                    loadingState.value = false
+                }
+                is NotepadEvent.Failure -> {
+                    loadingState.value = false
+                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
+                }
+                is NotepadEvent.Loading -> {
+                    loadingState.value = true
+                }
+                NotepadEvent.Logout -> {
+                    Toast.makeText(LocalContext.current, DELETED_LABEL, Toast.LENGTH_SHORT).show()
+                    navController.navigate(NAVIGATION_WELCOME_SCREEN)
+                }
             }
         }
     }
 
     Box(contentAlignment = BottomCenter) {
+        val listState = rememberLazyListState()
         LazyColumn(
+            state = listState,
             reverseLayout = true,
             modifier = Modifier
                 .fillMaxWidth(1f)
@@ -140,6 +161,31 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
                 NoteCardView(it, noteDeleteOnClickListener)
             }
         }
+        val showButton by remember {
+            derivedStateOf {
+                listState.firstVisibleItemIndex > 0
+            }
+        }
+
+        AnimatedVisibility(visible = showButton) {
+            Box( contentAlignment = BottomEnd,
+                modifier = Modifier
+                    .fillMaxSize(1F)
+                    .background(Color.Transparent)) {
+                FloatingActionButton(
+                    backgroundColor = MaterialTheme.colors.primary,
+                    onClick = {
+                    coroutineScope.launch { listState.animateScrollToItem(0) }
+                }, modifier = Modifier.padding(15.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDownward,
+                        contentDescription = "Down",
+                        tint = Color.White,
+                        modifier = Modifier.padding(15.dp)
+                    )
+                }
+            }
+        }
     }
     LoadingCircle(state = loadingState)
 }
@@ -150,7 +196,7 @@ fun EditorCard(
     inputTextLambda: (String) -> Unit,
     buttonAddNoteOnClickListener: () -> Unit,
     addImageOnClickListener: () -> Unit,
-    logoutOnClickListener: ()-> Unit,
+    logoutOnClickListener: () -> Unit,
     imgUri: MutableState<Uri>
 ) {
     val photoButtonLabel = remember { mutableStateOf(Constants.CHOSE_YOUR_IMAGE_LABEL) }
@@ -180,7 +226,7 @@ fun EditorCard(
                     contentDescription = "Logout",
                     tint = Color.Red,
                     modifier = Modifier.clickable {
-                    logoutOnClickListener()
+                        logoutOnClickListener()
                     }
                 )
             }
@@ -221,7 +267,7 @@ fun EditorCard(
                                         brush = Brush.linearGradient(
                                             listOf(Color.Black, Color.Transparent),
                                             start = Offset(900f, 0f),
-                                            end = Offset(800f, 200f)
+                                            end = Offset(750f, 200f)
                                         )
                                     )
                             )
@@ -296,7 +342,7 @@ fun InputData(label: String, text: MutableState<String>, typeObserver: (String) 
 
 @Composable
 fun NoteCardView(note: Notes, deleteLambda: (Notes) -> Unit) {
-    if (note.date != Constants.EMPTY_STRING && note.text != Constants.EMPTY_STRING) {
+    if (note.date != EMPTY_STRING && note.text != EMPTY_STRING) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(1f)
@@ -325,7 +371,7 @@ fun NoteCardView(note: Notes, deleteLambda: (Notes) -> Unit) {
                             .clickable { deleteLambda(note) }
                     )
                 }
-                if (note.img == Constants.EMPTY_STRING) {
+                if (note.img == EMPTY_STRING) {
                     Spacer(modifier = Modifier.padding(10.dp))
                 } else Card(
                     shape = RoundedCornerShape(10.dp),
@@ -349,9 +395,12 @@ fun NoteCardView(note: Notes, deleteLambda: (Notes) -> Unit) {
                                 CircularProgressIndicator(modifier = Modifier.size(50.dp))
                             }
                         }
-                        ImageLoadState.Empty -> {}
-                        is ImageLoadState.Success -> {}
-                        is ImageLoadState.Error -> {}
+                        ImageLoadState.Empty -> {
+                        }
+                        is ImageLoadState.Success -> {
+                        }
+                        is ImageLoadState.Error -> {
+                        }
                     }
                 }
                 Text(text = note.text)
