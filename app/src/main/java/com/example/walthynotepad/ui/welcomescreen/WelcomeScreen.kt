@@ -44,7 +44,7 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                 )
             }
         } else {
-            Log.e("!@#", Constants.errorInvalidEmail)
+            Log.e("!@#", Constants.ERROR_INVALID_EMAIL)
         }
     }
     val loginClickListener: () -> Unit = {
@@ -58,7 +58,7 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                 )
             }
         } else {
-            Log.e("!@#", Constants.errorInvalidEmail)
+            Log.e("!@#", Constants.ERROR_INVALID_EMAIL)
         }
     }
     
@@ -97,18 +97,18 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
                   horizontalAlignment = Alignment.CenterHorizontally,
                   modifier = Modifier.padding(15.dp)
               ) {
-                  TopLabel(Constants.loginRegisterLabel)
-                  RegisterData(Constants.email, text = email, emailLambda)
-                  RegisterData(Constants.password, text = password, passwordLambda)
+                  TopLabel(Constants.LOGIN_REGISTER_LABEL)
+                  RegisterData(Constants.EMAIL_LABEL, text = email, emailLambda)
+                  RegisterData(Constants.PASSWORD_LABEL, text = password, passwordLambda)
                   Row(
                       modifier = Modifier
                           .padding(15.dp)
                           .fillMaxWidth(1f),
                       horizontalArrangement = Arrangement.End
                   ) {
-                      ButtonLogReg(label = Constants.loginLabel, loginClickListener)
+                      ButtonLogReg(label = Constants.LOGIN_LABEL, loginClickListener)
                       Spacer(modifier = Modifier.padding(15.dp))
-                      ButtonLogReg(label = Constants.registrationLabel, registerClickListener)
+                      ButtonLogReg(label = Constants.REGISTRATION_LABEL, registerClickListener)
                   }
               }
 
@@ -126,7 +126,7 @@ fun TopLabel(text: String) {
 @Composable
 fun RegisterData(label: String, text: MutableState<String>, typeObserver: (String) -> Unit) {
     val transformation: VisualTransformation =
-        if (label == Constants.password) PasswordVisualTransformation()
+        if (label == Constants.PASSWORD_LABEL) PasswordVisualTransformation()
         else VisualTransformation.None
     OutlinedTextField(
         value = text.value,

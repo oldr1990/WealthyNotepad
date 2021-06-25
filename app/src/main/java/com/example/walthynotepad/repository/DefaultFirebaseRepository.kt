@@ -64,7 +64,7 @@ class DefaultFirebaseRepository @Inject constructor(
                         if (it.isSuccessful) CoroutineScope(Dispatchers.IO).launch {
                             _authCallBack.value =
                                 LoginResource.Success(
-                                    auth.currentUser?.uid ?: Constants.errorYouAreNotAuthorized
+                                    auth.currentUser?.uid ?: Constants.ERROR_YOU_ARE_NOT_AUTHORIZED
                                 )
                         }
                         else _authCallBack.value =
@@ -102,18 +102,18 @@ class DefaultFirebaseRepository @Inject constructor(
                     .addOnFailureListener {
                         _notepadCallBack.value = NotesResource.Error(it.message.toString())
                     }
-            } else throw Exception(Constants.errorYouAreNotAuthorized)
+            } else throw Exception(Constants.ERROR_YOU_ARE_NOT_AUTHORIZED)
         } catch (e: Exception) {
             _notepadCallBack.value = NotesResource.Error(e.message.toString())
         }
     }
 
     private suspend fun imageUploader(filename: String): String {
-        var url = Constants.emptyString
-        if (filename == Constants.emptyString) return url
+        var url = Constants.EMPTY_STRING
+        if (filename == Constants.EMPTY_STRING) return url
         try {
             val ref = storageReference
-                .child(Constants.firestoreImageDirectory + filename.hashCode().toString())
+                .child(Constants.FIRESTORE_IMAGE_DIRECTORY + filename.hashCode().toString())
             val uploadTask = ref.putFile(filename.toUri())
             uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {
@@ -127,7 +127,7 @@ class DefaultFirebaseRepository @Inject constructor(
                     if (task.isSuccessful) {
                         url = task.result.toString()
                     } else {
-                        _notepadCallBack.value = NotesResource.Error(Constants.errorImageUpload)
+                        _notepadCallBack.value = NotesResource.Error(Constants.ERROR_IMAGE_UPLOADING)
                     }
                 }.await()
 
@@ -141,10 +141,10 @@ class DefaultFirebaseRepository @Inject constructor(
     override suspend fun deleteNote(note: Notes) {
         if (deleteImage(note.img))
             firestore
-                .whereEqualTo(Constants.firestoreFieldDate, note.date)
-                .whereEqualTo(Constants.firestoreFieldImgURL, note.img)
-                .whereEqualTo(Constants.firestoreFieldText, note.text)
-                .whereEqualTo(Constants.firestoreFieldUserID, note.userUID).get()
+                .whereEqualTo(Constants.FIRESTORE_FIELD_DATE, note.date)
+                .whereEqualTo(Constants.FIRESTORE_FIELD_IMG_URL, note.img)
+                .whereEqualTo(Constants.FIRESTORE_FIEL_TEXT, note.text)
+                .whereEqualTo(Constants.FIRESTORE_FIELD_USER_ID, note.userUID).get()
                 .addOnSuccessListener {
                     if (!it.isEmpty) {
                         firestore.document(it.documents[0].id).delete().addOnSuccessListener {
@@ -155,12 +155,12 @@ class DefaultFirebaseRepository @Inject constructor(
                                     NotesResource.Error(it.message.toString())
                             }
                     } else _notepadCallBack.value =
-                        NotesResource.Error(Constants.errorNoteDidntFinded)
+                        NotesResource.Error(Constants.ERROR_NOTE_CANT_FIND_NOTE)
                 }
     }
 
     private suspend fun deleteImage(url: String): Boolean {
-        if (url == Constants.emptyString) return true
+        if (url == Constants.EMPTY_STRING) return true
         var isDeleted = false
         val imageReference = storage.getReferenceFromUrl(url)
         try {
@@ -177,7 +177,7 @@ class DefaultFirebaseRepository @Inject constructor(
 
     override suspend fun getNotes(uid: String) {
         firestore
-            .whereEqualTo(Constants.firestoreFieldUserID, uid)
+            .whereEqualTo(Constants.FIRESTORE_FIELD_USER_ID, uid)
             .addSnapshotListener { snapshot, error ->
                 error?.let {
                     _notepadCallBack.value = NotesResource.Error(error.message.toString())
@@ -197,15 +197,15 @@ class DefaultFirebaseRepository @Inject constructor(
     }
 
     override fun getLoginData(): UserEntries {
-        val email = sharedPreferences.getString(Constants.email, null) ?: ""
-        val password = sharedPreferences.getString(Constants.password, null) ?: ""
+        val email = sharedPreferences.getString(Constants.EMAIL_LABEL, null) ?: ""
+        val password = sharedPreferences.getString(Constants.PASSWORD_LABEL, null) ?: ""
         return UserEntries(email, password)
     }
 
     override fun setLoginData(userData: UserEntries) {
         sharedPreferences.edit().apply {
-            putString(Constants.email, userData.email)
-            putString(Constants.password, userData.password)
+            putString(Constants.EMAIL_LABEL, userData.email)
+            putString(Constants.PASSWORD_LABEL, userData.password)
             apply()
         }
     }

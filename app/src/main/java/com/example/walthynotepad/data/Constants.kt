@@ -1,38 +1,40 @@
 package com.example.walthynotepad.data
 
 object Constants {
-    const val firestoreFieldNoteTable = "notes"
-    const val firestoreFieldUserID = "userUID"
-    const val firestoreFieldDate = "date"
-    const val firestoreFieldImgURL = "img"
-    const val firestoreFieldText = "text"
-    const val firestoreImageDirectory = "image/"
+    const val FIRESTORE_FIELD_NOTE_TABLE = "notes"
+    const val FIRESTORE_FIELD_USER_ID = "userUID"
+    const val FIRESTORE_FIELD_DATE = "date"
+    const val FIRESTORE_FIELD_IMG_URL = "img"
+    const val FIRESTORE_FIEL_TEXT = "text"
+    const val FIRESTORE_IMAGE_DIRECTORY = "image/"
 
-    const val imageSearchType = "image/*"
+    const val IMAGE_SEARCH_TYPE = "image/*"
 
-    const val errorNoteDidntFinded = "Запись не найдена!"
-    const val errorYouAreNotAuthorized = "Вы не вошли в свой акаунт!"
-    const val errorInvalidEmail = "Не верный электронный адресс!"
-    const val errorImageUpload = "Ошибка при попытке загрузки фото!"
+    const val ERROR_NOTE_CANT_FIND_NOTE = "Запись не найдена!"
+    const val ERROR_YOU_ARE_NOT_AUTHORIZED = "Вы не вошли в свой акаунт!"
+    const val ERROR_INVALID_EMAIL = "Не верный электронный адресс!"
+    const val ERROR_IMAGE_UPLOADING = "Ошибка при попытке загрузки фото!"
 
-    const val sharedPreferencesName = "Login Data!"
-    const val email = "Электронная почта"
-    const val password = "Пароль"
-    const val loginLabel = "Войти"
-    const val registrationLabel = "Регистрация!"
-    const val loginRegisterLabel = "Войти / Зарегистрироваться"
-    const val emptyString = ""
-    const val enterYourNote = "Введите текст вашей заметки"
-    const val addNoteLabel = "Добавить"
-    const val choseYourImage = "Добавить фото"
-    const val changeYourImage = "Выбрать другое фото"
-    const val yourImage = "Ваше фото"
-    const val TO_DELETE = "Удалить"
+    const val SHARED_PREF_NAME = "Login Data!"
+    const val EMAIL_LABEL = "Электронная почта"
+    const val PASSWORD_LABEL = "Пароль"
+    const val LOGIN_LABEL = "Войти"
+    const val REGISTRATION_LABEL = "Регистрация!"
+    const val LOGIN_REGISTER_LABEL = "Войти / Зарегистрироваться"
+    const val EMPTY_STRING = ""
+    const val ENTER_YOUR_NOTE_LABEL = "Введите текст вашей заметки"
+    const val ADD_NOTE_LABEL = "Добавить"
+    const val CHOSE_YOUR_IMAGE_LABEL = "Добавить фото"
+    const val CHANGE_YOUR_IMAGE_LABEL = "Выбрать другое фото"
+    const val YOUR_IMAGE_LABEL = "Ваше фото"
+    const val TO_DELETE_LABEL = "Удалить"
+    const val BACK_PRESSED_MESSAGE = "Для выхода нажмите назад еще раз"
 
-    const val dataFormatPattern = "HH : mm : ss \t\t dd / MM / yyyy "
 
-    const val addedLabel = "Запись успушно добавлена!"
-    const val deletedLabel = "Запись успушно удалена!"
+    const val DATE_FORMAT_PATTERN = "HH : mm : ss \t\t dd / MM / yyyy "
 
-    const val maxImageDownloadSize = 5L*1024*1024
+    const val NOTE_ADDED_LABEL = "Запись успушно добавлена!"
+    const val NOTE_DELETED_LABEL = "Запись успушно удалена!"
+
+
 }

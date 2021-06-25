@@ -32,14 +32,14 @@ object WelcomeModule {
         object : FirebaseFirestoreAPI {
             override fun getCollectionReference(): CollectionReference {
                 val firestore = FirebaseFirestore.getInstance()
-                return firestore.collection(Constants.firestoreFieldNoteTable)
+                return firestore.collection(Constants.FIRESTORE_FIELD_NOTE_TABLE)
             }
         }
 
     @Provides
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferencesAPI {
         return object : SharedPreferencesAPI {
-            override val sharedPreferences: SharedPreferences = context.getSharedPreferences(Constants.sharedPreferencesName, Context.MODE_PRIVATE)
+            override val sharedPreferences: SharedPreferences = context.getSharedPreferences(Constants.SHARED_PREF_NAME, Context.MODE_PRIVATE)
         }
     }
 

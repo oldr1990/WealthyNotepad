@@ -16,11 +16,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomCenter
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
@@ -28,8 +26,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,7 +45,7 @@ import java.time.format.DateTimeFormatter
 fun Preview() {
     val url: MutableState<Uri> =
         remember { mutableStateOf("https://firebasestorage.googleapis.com/v0/b/fir-notebook-24c3a.appspot.com/o/image%2F-518351845?alt=media&token=0a8208b8-72a1-49d7-968b-6fd050fb4694".toUri()) }
-    val inputText = remember { mutableStateOf(Constants.emptyString) }
+    val inputText = remember { mutableStateOf(Constants.EMPTY_STRING) }
     EditorCard(
         inputText = inputText,
         inputTextLambda = { },
@@ -65,16 +61,18 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
     val imageUri = remember { mutableStateOf(Uri.EMPTY) }
     val eventHandler = viewModel.noteCallBack.collectAsState()
     var list by remember { mutableStateOf(listOf(Notes())) }
-    val inputText = remember { mutableStateOf(Constants.emptyString) }
+    val inputText = remember { mutableStateOf(Constants.EMPTY_STRING) }
     val loadingState = remember { mutableStateOf(false) }
 
     val inputTextLambda: (String) -> Unit = { it -> inputText.value = it }
     val buttonAddNoteOnClickListener: () -> Unit = {
-        val dateTime = LocalDateTime.now()
-        val formattedDateTime: String =
-            dateTime.format(DateTimeFormatter.ofPattern(Constants.dataFormatPattern))
-        val note = Notes(formattedDateTime, inputText.value, imageUri.value.toString(), userUID)
-        viewModel.addNote(note)
+        if (inputText.value != Constants.EMPTY_STRING) {
+            val dateTime = LocalDateTime.now()
+            val formattedDateTime: String =
+                dateTime.format(DateTimeFormatter.ofPattern(Constants.DATE_FORMAT_PATTERN))
+            val note = Notes(formattedDateTime, inputText.value, imageUri.value.toString(), userUID)
+            viewModel.addNote(note)
+        }
     }
     val noteDeleteOnClickListener: (Notes) -> Unit = {
         viewModel.deleteNote(it)
@@ -84,7 +82,7 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
             imageUri.value = it
         }
     val addImageOnClickListener: () -> Unit =
-        { imageReferenceResult.launch(Constants.imageSearchType) }
+        { imageReferenceResult.launch(Constants.IMAGE_SEARCH_TYPE) }
 
     eventHandler.value.let {
         list = viewModel.listOfNotes.value
@@ -92,7 +90,8 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
             is NotepadEvent.Success -> {
                 loadingState.value = false
                 list = it.notes
-                inputText.value = Constants.emptyString
+                inputText.value = Constants.EMPTY_STRING
+                imageUri.value = Uri.EMPTY
             }
             is NotepadEvent.Empty -> {
                 loadingState.value = false
@@ -142,7 +141,7 @@ fun EditorCard(
     addImageOnClickListener: () -> Unit,
     imgUri: MutableState<Uri>
 ) {
-    val photoButtonLabel = remember { mutableStateOf(Constants.choseYourImage) }
+    val photoButtonLabel = remember { mutableStateOf(Constants.CHOSE_YOUR_IMAGE_LABEL) }
     Card(
         elevation = 5.dp, modifier = Modifier
             .wrapContentHeight(CenterVertically)
@@ -158,7 +157,7 @@ fun EditorCard(
         )
         {
             if (imgUri.value != Uri.EMPTY) {
-                photoButtonLabel.value = Constants.changeYourImage
+                photoButtonLabel.value = Constants.CHANGE_YOUR_IMAGE_LABEL
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = CenterVertically,
@@ -169,8 +168,7 @@ fun EditorCard(
                         elevation = 5.dp,
                         shape = RoundedCornerShape(5),
                         modifier = Modifier
-                            .width(300.dp)
-                            .height(300.dp)
+                            .size(300.dp)
                             .padding(10.dp, 15.dp, 10.dp, 10.dp)
                     ) {
                         Box(
@@ -182,7 +180,7 @@ fun EditorCard(
 
                             Image(
                                 painter = rememberCoilPainter(request = imgUri.value),
-                                contentDescription = Constants.yourImage,
+                                contentDescription = Constants.YOUR_IMAGE_LABEL,
                                 modifier = Modifier
                                     .fillMaxWidth(1f)
                                     .fillMaxHeight(1f),
@@ -212,7 +210,7 @@ fun EditorCard(
                     }
 
                 }
-            } else photoButtonLabel.value = Constants.choseYourImage
+            } else photoButtonLabel.value = Constants.CHOSE_YOUR_IMAGE_LABEL
             Row(
                 verticalAlignment = CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -221,7 +219,7 @@ fun EditorCard(
                     .wrapContentHeight(CenterVertically)
             ) {
                 InputData(
-                    label = Constants.enterYourNote,
+                    label = Constants.ENTER_YOUR_NOTE_LABEL,
                     text = inputText,
                     inputTextLambda
                 )
@@ -235,7 +233,7 @@ fun EditorCard(
                     .padding(5.dp)
             ) {
                 ButtonNotepad(label = photoButtonLabel.value, addImageOnClickListener)
-                ButtonNotepad(label = Constants.addNoteLabel, buttonAddNoteOnClickListener)
+                ButtonNotepad(label = Constants.ADD_NOTE_LABEL, buttonAddNoteOnClickListener)
             }
         }
     }
@@ -269,8 +267,8 @@ fun InputData(label: String, text: MutableState<String>, typeObserver: (String) 
 
 
 @Composable
-fun NoteCardView(it: Notes, deleteLambda: (Notes) -> Unit) {
-    if (it.date != Constants.emptyString && it.text != Constants.emptyString) {
+fun NoteCardView(note: Notes, deleteLambda: (Notes) -> Unit) {
+    if (note.date != Constants.EMPTY_STRING && note.text != Constants.EMPTY_STRING) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(1f)
@@ -289,60 +287,35 @@ fun NoteCardView(it: Notes, deleteLambda: (Notes) -> Unit) {
                     modifier = Modifier.fillMaxWidth(1f)
                 ) {
 
-                    Text(text = it.date)
+                    Text(text = note.date)
                     Icon(
                         imageVector = Icons.Default.DeleteForever,
                         contentDescription = null,
                         tint = Color.Gray,
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { deleteLambda(it) }
+                            .clickable { deleteLambda(note) }
                     )
                 }
-
-                Spacer(modifier = Modifier.padding(5.dp))
-                Text(text = it.text)
-            }
-
-
-        }
-    }
-}
-
-@Composable
-fun NoteCardViewWithImage(it: Notes, deleteLambda: (Notes) -> Unit) {
-    if (it.date != Constants.emptyString && it.text != Constants.emptyString) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(1f)
-                .padding(5.dp),
-            elevation = 5.dp
-        ) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(1f)
-                    .wrapContentHeight(CenterVertically)
-                    .padding(15.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth(1f)
+                if (note.img == Constants.EMPTY_STRING) {
+                    Spacer(modifier = Modifier.padding(10.dp))
+                } else Card(
+                    shape = RoundedCornerShape(10.dp),
+                    elevation = 5.dp,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(300.dp)
                 ) {
-
-                    Text(text = it.date)
-                    Icon(
-                        imageVector = Icons.Default.DeleteForever,
-                        contentDescription = null,
-                        tint = Color.Gray,
+                    Image(
+                        painter = rememberCoilPainter(request = note.img),
+                        contentDescription = Constants.YOUR_IMAGE_LABEL,
                         modifier = Modifier
-                            .size(24.dp)
-                            .clickable { deleteLambda(it) }
+                            .fillMaxWidth(1f)
+                            .fillMaxHeight(1f),
+                        contentScale = ContentScale.Crop,
                     )
                 }
-
-                Spacer(modifier = Modifier.padding(5.dp))
-                Text(text = it.text)
+                Text(text = note.text)
             }
 
 

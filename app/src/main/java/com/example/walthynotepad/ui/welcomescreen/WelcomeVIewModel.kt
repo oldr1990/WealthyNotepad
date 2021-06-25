@@ -24,7 +24,7 @@ class WelcomeVIewModel @ViewModelInject constructor(
         viewModelScope.launch(dispatcher.io) {
             if (firebaseRepository.checkLoginData()) {
                 val data = firebaseRepository.getLoginData()
-                if (data.password != Constants.emptyString && data.email != Constants.emptyString)
+                if (data.password != Constants.EMPTY_STRING && data.email != Constants.EMPTY_STRING)
                     login(data)
             }
             firebaseRepository.authCallBack.collect {
