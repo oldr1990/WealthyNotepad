@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
    
-    <item android:drawable="@drawable/walthy_notepad_icon" android:gravity="center"
+    <item android:drawable="@drawable/wealthy_notepad_icon" android:gravity="center"
          android:width="300dp" android:height="300dp"/>
 </layer-list>

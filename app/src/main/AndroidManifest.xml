@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.walthynotepad">
+    package="com.example.wealthynotepad">
 <uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
     <application
-        android:name=".NotepadApplication"
+        android:name="com.example.wealthynotepad.NotepadApplication"
         android:allowBackup="true"
-        android:icon="@drawable/walthy_notepad_icon"
+        android:icon="@drawable/wealthy_notepad_icon"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/walthy_notepad_icon"
+        android:roundIcon="@drawable/wealthy_notepad_icon"
         android:supportsRtl="true"
         android:theme="@style/LoadScreen">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.wealthynotepad.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/LoadScreen">
