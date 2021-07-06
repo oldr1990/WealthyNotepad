@@ -31,7 +31,6 @@ class NotepadViewModel @ViewModelInject constructor(
     val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
 
     init {
-        Log.e("!@#", "Notepad VIew model init")
         viewModelScope.launch(dispatcher.io) {
             if (firebaseRepository.checkLoginState()) {
                 uid = firebaseRepository.getUserUID().toString()
@@ -67,6 +66,7 @@ class NotepadViewModel @ViewModelInject constructor(
                     }
                 }
             }
+            else _noteCallBack.value = NotepadEvent.Logout
         }
     }
 
@@ -91,7 +91,7 @@ class NotepadViewModel @ViewModelInject constructor(
         }
     }
 
-     fun getNotes() {
+     private fun getNotes() {
         viewModelScope.launch(dispatcher.io) {
             _noteCallBack.value = NotepadEvent.Loading
             firebaseRepository.getNotes(uid)

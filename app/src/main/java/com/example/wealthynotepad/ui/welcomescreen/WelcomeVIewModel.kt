@@ -1,7 +1,6 @@
 package com.example.wealthynotepad.ui.welcomescreen
 
 
-import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +22,6 @@ class WelcomeVIewModel @ViewModelInject constructor(
 
     init {
         viewModelScope.launch(dispatcher.io) {
-            Log.e("!@#", "Welcome screen")
             if (firebaseRepository.checkLoginData()) {
                 val data = firebaseRepository.getLoginData()
                 if (data.password != Constants.EMPTY_STRING && data.email != Constants.EMPTY_STRING)
@@ -63,11 +61,15 @@ class WelcomeVIewModel @ViewModelInject constructor(
         }
     }
 
+    fun getUserID():Boolean{
+
+        return firebaseRepository.checkLoginData()}
+
     fun login(userdata: UserEntries) {
-        viewModelScope.launch(dispatcher.io) {
+
             _loginFlow.value = LoginEvent.Loading
             firebaseRepository.setLoginData(userdata)
-            firebaseRepository.loginUser(userdata)
+            viewModelScope.launch(dispatcher.io) {  firebaseRepository.loginUser(userdata)
         }
     }
 }
