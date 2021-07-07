@@ -17,6 +17,7 @@ object Constants {
     const val ERROR_YOU_ARE_NOT_AUTHORIZED = "Вы не вошли в свой акаунт!"
     const val ERROR_INVALID_EMAIL = "Не верный электронный адресс!"
     const val ERROR_IMAGE_UPLOADING = "Ошибка при попытке загрузки фото!"
+    const val ERROR_DATE = "Ошибка при определении времени!"
 
     const val SHARED_PREF_NAME = "Login Data!"
     const val EMAIL_LABEL = "Электронная почта"

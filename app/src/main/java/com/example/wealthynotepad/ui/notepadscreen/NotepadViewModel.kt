@@ -1,10 +1,10 @@
 package com.example.wealthynotepad.ui.notepadscreen
 
-import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wealthynotepad.data.Constants
+import com.example.wealthynotepad.data.Constants.ERROR_DATE
 import com.example.wealthynotepad.data.Notes
 import com.example.wealthynotepad.repository.FirebaseRepository
 import com.example.wealthynotepad.util.DispatcherProvider
@@ -56,7 +56,7 @@ class NotepadViewModel @ViewModelInject constructor(
                         }
                         is NotesResource.Error -> {
                             isHandled = false
-                            _noteCallBack.value = NotepadEvent.Failure(response.toString())
+                            _noteCallBack.value = NotepadEvent.Failure(response.message.toString())
                             _noteCallBack.value = NotepadEvent.Empty
                         }
                         is NotesResource.Empty -> {}
@@ -71,10 +71,13 @@ class NotepadViewModel @ViewModelInject constructor(
     }
 
     fun addNote(note: Notes) {
-        viewModelScope.launch(dispatcher.io) {
-            _noteCallBack.value = NotepadEvent.Loading
-            firebaseRepository.addNote(note)
+        if (note.date.toLongOrNull()!=null){
+            viewModelScope.launch(dispatcher.io) {
+                _noteCallBack.value = NotepadEvent.Loading
+                firebaseRepository.addNote(note)
+            }
         }
+        else _noteCallBack.value = NotepadEvent.Failure(ERROR_DATE)
     }
 
     fun deleteNote(note: Notes) {

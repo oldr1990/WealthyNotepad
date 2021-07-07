@@ -43,12 +43,8 @@ class WelcomeVIewModel @ViewModelInject constructor(
             firebaseRepository.getUserUID().let {
                 if (it != null) LoginEvent.Success(it)
             }
-
         }
-
-
     }
-
 
     private val _loginFlow = MutableStateFlow<LoginEvent>(LoginEvent.Empty)
     val loginFlow: StateFlow<LoginEvent> = _loginFlow
@@ -61,12 +57,7 @@ class WelcomeVIewModel @ViewModelInject constructor(
         }
     }
 
-    fun getUserID():Boolean{
-
-        return firebaseRepository.checkLoginData()}
-
     fun login(userdata: UserEntries) {
-
             _loginFlow.value = LoginEvent.Loading
             firebaseRepository.setLoginData(userdata)
             viewModelScope.launch(dispatcher.io) {  firebaseRepository.loginUser(userdata)

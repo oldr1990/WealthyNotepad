@@ -6,7 +6,9 @@ import com.example.wealthynotepad.TestConstants.ERROR_NOTE_DOESNT_EXIST
 import com.example.wealthynotepad.TestConstants.ERROR_NOT_AUTHORIZED
 import com.example.wealthynotepad.TestConstants.ERROR_WRONG_DATE
 import com.example.wealthynotepad.TestConstants.ERROR_WRONG_EMAIL
+import com.example.wealthynotepad.TestConstants.ERROR_WRONG_IMG_URI
 import com.example.wealthynotepad.TestConstants.ERROR_WRONG_PASSWORD
+import com.example.wealthynotepad.TestConstants.NOTE_IMG_URI
 import com.example.wealthynotepad.TestConstants.TEST_EMAIL
 import com.example.wealthynotepad.TestConstants.TEST_PASSWORD
 import com.example.wealthynotepad.TestConstants.TEST_USER_ID
@@ -39,8 +41,16 @@ class FakeRepository : FirebaseRepository {
     }
 
     override suspend fun loginUser(userdata: UserEntries) {
-
+        if (isItEmail(userdata.email)) {
+            if (userdata.password.length < 4 || userdata.password.length > 16) _authCallBack.value =
+                LoginResource.Error(
+                    ERROR_WRONG_PASSWORD
+                )
+            else {
+                isRegistered = true
                 _authCallBack.value = LoginResource.Success(TEST_USER_ID)
+            }
+        } else _authCallBack.value = LoginResource.Error(ERROR_WRONG_EMAIL)
 
     }
 
@@ -51,14 +61,17 @@ class FakeRepository : FirebaseRepository {
 
     override suspend fun logout() {
         isRegistered = false
+        _notepadCallBack.value = NotesResource.Logout()
     }
 
     override suspend fun addNote(note: Notes) {
         if (isRegistered) {
             if (note.text != EMPTY_STRING) {
                 if (note.date.toLongOrNull() != null) {
-                    notes.add(note)
-                    _notepadCallBack.value = NotesResource.SuccessAdd()
+                    if (note.img == NOTE_IMG_URI || note.img == EMPTY_STRING){
+                        notes.add(note)
+                        _notepadCallBack.value = NotesResource.SuccessAdd()
+                    }else _notepadCallBack.value = NotesResource.Error(ERROR_WRONG_IMG_URI)
                 } else _notepadCallBack.value = NotesResource.Error(ERROR_WRONG_DATE)
             } else _notepadCallBack.value = NotesResource.Error(ERROR_EMPTY_TEXT)
         } else _notepadCallBack.value = NotesResource.Error(ERROR_NOT_AUTHORIZED)
@@ -93,7 +106,7 @@ class FakeRepository : FirebaseRepository {
     }
 
     override fun checkLoginData(): Boolean {
-        _authCallBack.value = LoginResource.Error("")
+        _authCallBack.value = LoginResource.Error(EMPTY_STRING)
         return isSetData
     }
 }
