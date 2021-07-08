@@ -69,8 +69,12 @@ class FakeRepository : FirebaseRepository {
             if (note.text != EMPTY_STRING) {
                 if (note.date.toLongOrNull() != null) {
                     if (note.img == NOTE_IMG_URI || note.img == EMPTY_STRING){
-                        notes.add(note)
-                        _notepadCallBack.value = NotesResource.SuccessAdd()
+                        if(note.userUID == TEST_USER_ID){
+                            notes.add(note)
+                            _notepadCallBack.value = NotesResource.Success(notes)
+                            _notepadCallBack.value = NotesResource.SuccessAdd()
+                        }
+                        else _notepadCallBack.value = NotesResource.Error(ERROR_NOT_AUTHORIZED)
                     }else _notepadCallBack.value = NotesResource.Error(ERROR_WRONG_IMG_URI)
                 } else _notepadCallBack.value = NotesResource.Error(ERROR_WRONG_DATE)
             } else _notepadCallBack.value = NotesResource.Error(ERROR_EMPTY_TEXT)
@@ -81,6 +85,7 @@ class FakeRepository : FirebaseRepository {
         if (isRegistered) {
             if (notes.contains(note)) {
                 notes.remove(note)
+                _notepadCallBack.value = NotesResource.Success(notes)
                 _notepadCallBack.value = NotesResource.SuccessDelete()
             } else _notepadCallBack.value = NotesResource.Error(ERROR_NOTE_DOESNT_EXIST)
         } else _notepadCallBack.value = NotesResource.Error(ERROR_NOT_AUTHORIZED)

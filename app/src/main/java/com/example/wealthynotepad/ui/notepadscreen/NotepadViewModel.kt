@@ -57,7 +57,6 @@ class NotepadViewModel @ViewModelInject constructor(
                         is NotesResource.Error -> {
                             isHandled = false
                             _noteCallBack.value = NotepadEvent.Failure(response.message.toString())
-                            _noteCallBack.value = NotepadEvent.Empty
                         }
                         is NotesResource.Empty -> {}
                         is NotesResource.Logout -> {
