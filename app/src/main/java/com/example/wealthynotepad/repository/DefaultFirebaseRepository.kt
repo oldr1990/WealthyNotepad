@@ -6,8 +6,8 @@ import com.example.wealthynotepad.data.Constants.EMAIL_LABEL
 import com.example.wealthynotepad.data.Constants.EMPTY_STRING
 import com.example.wealthynotepad.data.Constants.PASSWORD_LABEL
 import com.example.wealthynotepad.util.DispatcherProvider
-import com.example.wealthynotepad.util.LoginResource
-import com.example.wealthynotepad.util.NotesResource
+import com.example.wealthynotepad.ui.welcomescreen.LoginResource
+import com.example.wealthynotepad.ui.notepadscreen.NotesResource
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope

@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import com.example.wealthynotepad.data.Constants
 import com.example.wealthynotepad.data.UserEntries
 import com.example.wealthynotepad.ui.composes.LoadingCircle
-import com.example.wealthynotepad.util.LoginEvent
 import com.example.wealthynotepad.util.isItEmail
 
 

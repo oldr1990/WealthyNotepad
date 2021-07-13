@@ -2,8 +2,8 @@ package com.example.wealthynotepad.repository
 
 import com.example.wealthynotepad.data.Notes
 import com.example.wealthynotepad.data.UserEntries
-import com.example.wealthynotepad.util.LoginResource
-import com.example.wealthynotepad.util.NotesResource
+import com.example.wealthynotepad.ui.welcomescreen.LoginResource
+import com.example.wealthynotepad.ui.notepadscreen.NotesResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

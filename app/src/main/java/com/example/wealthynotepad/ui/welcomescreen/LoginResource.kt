@@ -1,4 +1,4 @@
-package com.example.wealthynotepad.util
+package com.example.wealthynotepad.ui.welcomescreen
 
 sealed class LoginResource<T>(val data: String) {
     class Success<T>(data: String) : LoginResource<T>(data)

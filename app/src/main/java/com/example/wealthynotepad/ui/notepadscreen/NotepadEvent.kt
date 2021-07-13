@@ -1,4 +1,4 @@
-package com.example.wealthynotepad.util
+package com.example.wealthynotepad.ui.notepadscreen
 
 import com.example.wealthynotepad.data.Notes
 

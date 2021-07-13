@@ -1,4 +1,4 @@
-package com.example.wealthynotepad.util
+package com.example.wealthynotepad.ui.welcomescreen
 
 sealed class LoginEvent {
     class Success(val uid: String) : LoginEvent()

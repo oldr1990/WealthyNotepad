@@ -43,7 +43,6 @@ import com.example.wealthynotepad.data.Constants.IMAGE_SEARCH_TYPE
 import com.example.wealthynotepad.data.Constants.NAVIGATION_WELCOME_SCREEN
 import com.example.wealthynotepad.data.Notes
 import com.example.wealthynotepad.ui.composes.LoadingCircle
-import com.example.wealthynotepad.util.NotepadEvent
 import com.example.wealthynotepad.util.millisToDate
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.imageloading.ImageLoadState

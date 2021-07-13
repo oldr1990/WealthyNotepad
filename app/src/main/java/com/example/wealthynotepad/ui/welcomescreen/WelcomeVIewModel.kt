@@ -8,8 +8,6 @@ import com.example.wealthynotepad.data.Constants
 import com.example.wealthynotepad.data.UserEntries
 import com.example.wealthynotepad.repository.FirebaseRepository
 import com.example.wealthynotepad.util.DispatcherProvider
-import com.example.wealthynotepad.util.LoginEvent
-import com.example.wealthynotepad.util.LoginResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect

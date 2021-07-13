@@ -8,8 +8,6 @@ import com.example.wealthynotepad.data.Constants.ERROR_DATE
 import com.example.wealthynotepad.data.Notes
 import com.example.wealthynotepad.repository.FirebaseRepository
 import com.example.wealthynotepad.util.DispatcherProvider
-import com.example.wealthynotepad.util.NotepadEvent
-import com.example.wealthynotepad.util.NotesResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
