@@ -38,7 +38,7 @@ class DefaultFirebaseRepository @Inject constructor(
     private val _notepadCallBack = MutableStateFlow<NotesResource<Notes>>(NotesResource.Empty())
     override val notepadCallBack: MutableStateFlow<NotesResource<Notes>> = _notepadCallBack
 
-    override suspend fun registerUser(userdata: UserEntries) {
+    override  fun registerUser(userdata: UserEntries) {
         try {
             CoroutineScope(dispatcher.io).launch {
                 auth.createUserWithEmailAndPassword(userdata.email, userdata.password)

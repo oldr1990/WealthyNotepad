@@ -2,6 +2,7 @@ package com.example.wealthynotepad.ui.welcomescreen
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -9,16 +10,20 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.wealthynotepad.R
 import com.example.wealthynotepad.data.Constants
 import com.example.wealthynotepad.data.UserEntries
 import com.example.wealthynotepad.ui.composes.LoadingCircle
 import com.example.wealthynotepad.util.isItEmail
+import com.google.accompanist.coil.rememberCoilPainter
 
 
 @Composable
@@ -78,7 +83,15 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
     }
 
     Box {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize(1f)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.wealthy_notepad_icon),
+                contentDescription = "Icon"
+            )
             Card(
                 modifier = Modifier
                     .fillMaxWidth(1f)
