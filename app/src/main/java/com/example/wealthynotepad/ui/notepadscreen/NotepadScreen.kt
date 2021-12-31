@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -46,6 +47,8 @@ import com.example.wealthynotepad.ui.composes.LoadingCircle
 import com.example.wealthynotepad.util.millisToDate
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.imageloading.ImageLoadState
+import kotlinx.coroutines.flow.collect
+import kotlin.coroutines.coroutineContext
 import com.example.wealthynotepad.ui.notepadscreen.EditorCard as EditorCard1
 
 
@@ -71,7 +74,7 @@ fun Preview() {
 fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: NavController) {
     val imageUri = remember { mutableStateOf(Uri.EMPTY) }
     val eventHandler = viewModel.noteCallBack.collectAsState()
-    var list by remember { mutableStateOf(listOf(Notes())) }
+    val list = remember { mutableStateOf(listOf(Notes())) }
     val inputText = remember { mutableStateOf(EMPTY_STRING) }
     val loadingState = remember { mutableStateOf(false) }
     val logoutOnClickListener: () -> Unit = { viewModel.logout() }
@@ -96,40 +99,38 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
         { imageReferenceResult.launch(IMAGE_SEARCH_TYPE) }
 
     eventHandler.value.let {
-
-           list = viewModel.listOfNotes.value
-            when (it) {
-                is NotepadEvent.Success -> {
+        when (it) {
+            is NotepadViewModel.NotepadEvent.Success -> {
+                loadingState.value = false
+                list.value = it.notes
+                inputText.value = EMPTY_STRING
+                imageUri.value = Uri.EMPTY
+            }
+            is NotepadViewModel.NotepadEvent.Empty -> {
+            }
+            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> {
+                if (!viewModel.isHandled) {
+                    viewModel.isHandled = true
+                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
                     loadingState.value = false
-                    list = it.notes
-                    inputText.value = EMPTY_STRING
-                    imageUri.value = Uri.EMPTY
-                }
-                is NotepadEvent.Empty -> {
-                }
-                is NotepadEvent.SuccessAddDelete -> {
-                    if (!viewModel.isHandled) {
-                        viewModel.isHandled = true
-                        Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
-                        loadingState.value = false
-                    }
-                }
-                is NotepadEvent.Failure -> {
-                    if (!viewModel.isHandled) {
-                        viewModel.isHandled = true
-                        loadingState.value = false
-                        Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
-                    }
-                }
-                is NotepadEvent.Loading -> {
-                    viewModel.isHandled = false
-                    loadingState.value = true
-                }
-                NotepadEvent.Logout -> {
-                    Toast.makeText(LocalContext.current, DELETED_LABEL, Toast.LENGTH_SHORT).show()
-                    navController.navigate(NAVIGATION_WELCOME_SCREEN)
                 }
             }
+            is NotepadViewModel.NotepadEvent.Failure -> {
+                if (!viewModel.isHandled) {
+                    viewModel.isHandled = true
+                    loadingState.value = false
+                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+            is NotepadViewModel.NotepadEvent.Loading -> {
+                viewModel.isHandled = false
+                loadingState.value = true
+            }
+            NotepadViewModel.NotepadEvent.Logout -> {
+                Toast.makeText(LocalContext.current, DELETED_LABEL, Toast.LENGTH_SHORT).show()
+                navController.navigate(NAVIGATION_WELCOME_SCREEN)
+            }
+        }
 
     }
 
@@ -150,7 +151,7 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
                     imgUri = imageUri
                 )
             }
-            items(list) {
+            items(list.value) {
                 NoteCardView(it, noteDeleteOnClickListener)
             }
         }

@@ -77,12 +77,12 @@ class NotepadViewModelTest {
         if(viewModel.listOfNotes.value.contains(note)){
             val event = runBlocking(Dispatchers.Main) { viewModel.noteCallBack.first() }
             answer = when (event) {
-                NotepadEvent.Empty -> false
-                is NotepadEvent.Failure -> false
-                NotepadEvent.Loading -> false
-                NotepadEvent.Logout -> false
-                is NotepadEvent.Success -> false
-                is NotepadEvent.SuccessAddDelete -> true
+                NotepadViewModel.NotepadEvent.Empty -> false
+                is NotepadViewModel.NotepadEvent.Failure -> false
+                NotepadViewModel.NotepadEvent.Loading -> false
+                NotepadViewModel.NotepadEvent.Logout -> false
+                is NotepadViewModel.NotepadEvent.Success -> false
+                is NotepadViewModel.NotepadEvent.SuccessAddDelete -> true
             }
         }
         assertThat(answer).isTrue()
@@ -103,12 +103,12 @@ class NotepadViewModelTest {
         }
         val event = runBlocking { viewModel.noteCallBack.value }
         answer = when (event) {
-            NotepadEvent.Empty -> false
-            is NotepadEvent.Failure -> event.message == ERROR_WRONG_IMG_URI
-            NotepadEvent.Loading -> false
-            NotepadEvent.Logout -> false
-            is NotepadEvent.Success -> false
-            is NotepadEvent.SuccessAddDelete -> false
+            NotepadViewModel.NotepadEvent.Empty -> false
+            is NotepadViewModel.NotepadEvent.Failure -> event.message == ERROR_WRONG_IMG_URI
+            NotepadViewModel.NotepadEvent.Loading -> false
+            NotepadViewModel.NotepadEvent.Logout -> false
+            is NotepadViewModel.NotepadEvent.Success -> false
+            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> false
         }
         assertThat(answer).isTrue()
     }
@@ -128,12 +128,12 @@ class NotepadViewModelTest {
         }
         val event = runBlocking { viewModel.noteCallBack.value }
         answer = when (event) {
-            NotepadEvent.Empty -> false
-            is NotepadEvent.Failure -> event.message == ERROR_EMPTY_TEXT
-            NotepadEvent.Loading -> false
-            NotepadEvent.Logout -> false
-            is NotepadEvent.Success -> false
-            is NotepadEvent.SuccessAddDelete -> false
+            NotepadViewModel.NotepadEvent.Empty -> false
+            is NotepadViewModel.NotepadEvent.Failure -> event.message == ERROR_EMPTY_TEXT
+            NotepadViewModel.NotepadEvent.Loading -> false
+            NotepadViewModel.NotepadEvent.Logout -> false
+            is NotepadViewModel.NotepadEvent.Success -> false
+            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> false
         }
         assertThat(answer).isTrue()
     }
@@ -153,12 +153,12 @@ class NotepadViewModelTest {
         }
         val event = runBlocking { viewModel.noteCallBack.value }
         answer = when (event) {
-            NotepadEvent.Empty -> false
-            is NotepadEvent.Failure -> event.message == ERROR_NOT_AUTHORIZED
-            NotepadEvent.Loading -> false
-            NotepadEvent.Logout -> false
-            is NotepadEvent.Success -> false
-            is NotepadEvent.SuccessAddDelete -> false
+            NotepadViewModel.NotepadEvent.Empty -> false
+            is NotepadViewModel.NotepadEvent.Failure -> event.message == ERROR_NOT_AUTHORIZED
+            NotepadViewModel.NotepadEvent.Loading -> false
+            NotepadViewModel.NotepadEvent.Logout -> false
+            is NotepadViewModel.NotepadEvent.Success -> false
+            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> false
         }
         assertThat(answer).isTrue()
     }
@@ -178,12 +178,12 @@ class NotepadViewModelTest {
         }
         val event = runBlocking { viewModel.noteCallBack.value }
         answer = when (event) {
-            NotepadEvent.Empty -> false
-            is NotepadEvent.Failure -> event.message == ERROR_DATE
-            NotepadEvent.Loading -> false
-            NotepadEvent.Logout -> false
-            is NotepadEvent.Success -> false
-            is NotepadEvent.SuccessAddDelete -> false
+            NotepadViewModel.NotepadEvent.Empty -> false
+            is NotepadViewModel.NotepadEvent.Failure -> event.message == ERROR_DATE
+            NotepadViewModel.NotepadEvent.Loading -> false
+            NotepadViewModel.NotepadEvent.Logout -> false
+            is NotepadViewModel.NotepadEvent.Success -> false
+            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> false
         }
         assertThat(answer).isTrue()
     }
@@ -202,12 +202,12 @@ class NotepadViewModelTest {
            if (!viewModel.listOfNotes.value.contains(note)) {
                val event = runBlocking { viewModel.noteCallBack.value }
                answer = when (event) {
-                   NotepadEvent.Empty -> false
-                   is NotepadEvent.Failure ->false
-                   NotepadEvent.Loading -> false
-                   NotepadEvent.Logout -> false
-                   is NotepadEvent.Success -> false
-                   is NotepadEvent.SuccessAddDelete -> event.message == NOTE_DELETED_LABEL
+                   NotepadViewModel.NotepadEvent.Empty -> false
+                   is NotepadViewModel.NotepadEvent.Failure ->false
+                   NotepadViewModel.NotepadEvent.Loading -> false
+                   NotepadViewModel.NotepadEvent.Logout -> false
+                   is NotepadViewModel.NotepadEvent.Success -> false
+                   is NotepadViewModel.NotepadEvent.SuccessAddDelete -> event.message == NOTE_DELETED_LABEL
                }
            }
         assertThat(answer).isTrue()
@@ -237,12 +237,12 @@ class NotepadViewModelTest {
         }
         val event = runBlocking { viewModel.noteCallBack.value }
         answer = when (event) {
-            NotepadEvent.Empty -> false
-            is NotepadEvent.Failure -> false
-            NotepadEvent.Loading -> false
-            NotepadEvent.Logout -> true
-            is NotepadEvent.Success -> false
-            is NotepadEvent.SuccessAddDelete -> false
+            NotepadViewModel.NotepadEvent.Empty -> false
+            is NotepadViewModel.NotepadEvent.Failure -> false
+            NotepadViewModel.NotepadEvent.Loading -> false
+            NotepadViewModel.NotepadEvent.Logout -> true
+            is NotepadViewModel.NotepadEvent.Success -> false
+            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> false
         }
         assertThat(answer).isTrue()
     }

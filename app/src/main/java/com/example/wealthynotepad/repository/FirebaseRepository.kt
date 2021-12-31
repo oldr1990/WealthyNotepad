@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface FirebaseRepository {
     val authCallBack: StateFlow<LoginResource<Boolean>>
     val notepadCallBack: MutableStateFlow<NotesResource<Notes>>
-    fun registerUser (userdata: UserEntries)
+    suspend fun registerUser (userdata: UserEntries)
     suspend fun loginUser (userdata: UserEntries)
     suspend fun checkLoginState():Boolean
     suspend fun logout()

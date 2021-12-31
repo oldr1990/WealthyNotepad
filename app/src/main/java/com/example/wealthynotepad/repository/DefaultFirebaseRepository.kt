@@ -38,7 +38,7 @@ class DefaultFirebaseRepository @Inject constructor(
     private val _notepadCallBack = MutableStateFlow<NotesResource<Notes>>(NotesResource.Empty())
     override val notepadCallBack: MutableStateFlow<NotesResource<Notes>> = _notepadCallBack
 
-    override  fun registerUser(userdata: UserEntries) {
+    override suspend fun registerUser(userdata: UserEntries) {
         try {
             CoroutineScope(dispatcher.io).launch {
                 auth.createUserWithEmailAndPassword(userdata.email, userdata.password)
@@ -64,14 +64,13 @@ class DefaultFirebaseRepository @Inject constructor(
             CoroutineScope(dispatcher.io).launch {
                 auth.signInWithEmailAndPassword(userdata.email, userdata.password)
                     .addOnCompleteListener {
-                        if (it.isSuccessful) CoroutineScope(Dispatchers.IO).launch {
-                            _authCallBack.value =
-                                LoginResource.Success(
-                                    auth.currentUser?.uid ?: Constants.ERROR_YOU_ARE_NOT_AUTHORIZED
-                                )
+                        _authCallBack.value =  if (it.isSuccessful) {
+                            LoginResource.Success(
+                                auth.currentUser?.uid ?: Constants.ERROR_YOU_ARE_NOT_AUTHORIZED)
                         }
-                        else _authCallBack.value =
+                        else {
                             LoginResource.Error(it.exception?.message.toString())
+                        }
                     }
             }
         } catch (e: Exception) {

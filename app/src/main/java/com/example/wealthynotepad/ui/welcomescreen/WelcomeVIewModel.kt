@@ -56,9 +56,10 @@ class WelcomeVIewModel @ViewModelInject constructor(
     }
 
     fun login(userdata: UserEntries) {
-            _loginFlow.value = LoginEvent.Loading
-            firebaseRepository.setLoginData(userdata)
-            viewModelScope.launch(dispatcher.io) {  firebaseRepository.loginUser(userdata)
+            viewModelScope.launch(dispatcher.io) {
+                _loginFlow.value = LoginEvent.Loading
+                firebaseRepository.setLoginData(userdata)
+                firebaseRepository.loginUser(userdata)
         }
     }
 }
