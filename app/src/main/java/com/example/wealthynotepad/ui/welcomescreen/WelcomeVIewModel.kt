@@ -1,19 +1,22 @@
 package com.example.wealthynotepad.ui.welcomescreen
 
 
-import androidx.hilt.lifecycle.ViewModelInject
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wealthynotepad.data.Constants
 import com.example.wealthynotepad.data.UserEntries
 import com.example.wealthynotepad.repository.FirebaseRepository
 import com.example.wealthynotepad.util.DispatcherProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class WelcomeVIewModel @ViewModelInject constructor(
+@HiltViewModel
+class WelcomeVIewModel @Inject constructor(
     private val firebaseRepository: FirebaseRepository,
     private val dispatcher: DispatcherProvider
 ) : ViewModel() {

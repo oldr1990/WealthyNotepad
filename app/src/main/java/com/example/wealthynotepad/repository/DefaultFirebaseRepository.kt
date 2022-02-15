@@ -74,7 +74,6 @@ class DefaultFirebaseRepository @Inject constructor(
                     }
             }
         } catch (e: Exception) {
-
             _authCallBack.value = LoginResource.Error(e.message.toString())
         }
     }

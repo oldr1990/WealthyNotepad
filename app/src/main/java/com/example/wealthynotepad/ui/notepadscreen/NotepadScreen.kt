@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -48,6 +50,7 @@ import com.example.wealthynotepad.util.millisToDate
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.imageloading.ImageLoadState
 import kotlinx.coroutines.flow.collect
+import java.io.Serializable
 import kotlin.coroutines.coroutineContext
 import com.example.wealthynotepad.ui.notepadscreen.EditorCard as EditorCard1
 
@@ -73,11 +76,10 @@ fun Preview() {
 @Composable
 fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: NavController) {
     val imageUri = remember { mutableStateOf(Uri.EMPTY) }
-    val eventHandler = viewModel.noteCallBack.collectAsState()
+    val eventHandler = viewModel.noteCallBack.collectAsState().value
     val list = remember { mutableStateOf(listOf(Notes())) }
     val inputText = remember { mutableStateOf(EMPTY_STRING) }
     val loadingState = remember { mutableStateOf(false) }
-    val logoutOnClickListener: () -> Unit = { viewModel.logout() }
     val inputTextLambda: (String) -> Unit = { text ->
         inputText.value = text
     }
@@ -98,39 +100,39 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
     val addImageOnClickListener: () -> Unit =
         { imageReferenceResult.launch(IMAGE_SEARCH_TYPE) }
 
-    eventHandler.value.let {
-        when (it) {
-            is NotepadViewModel.NotepadEvent.Success -> {
+    when (eventHandler) {
+        is NotepadViewModel.NotepadEvent.Success -> {
+            loadingState.value = false
+            list.value = eventHandler.notes
+            inputText.value = EMPTY_STRING
+            imageUri.value = Uri.EMPTY
+        }
+        is NotepadViewModel.NotepadEvent.Empty -> {}
+        is NotepadViewModel.NotepadEvent.SuccessAddDelete -> {
+            if (!viewModel.isHandled) {
+                viewModel.isHandled = true
+                Toast.makeText(LocalContext.current, eventHandler.message, Toast.LENGTH_SHORT)
+                    .show()
                 loadingState.value = false
-                list.value = it.notes
-                inputText.value = EMPTY_STRING
-                imageUri.value = Uri.EMPTY
-            }
-            is NotepadViewModel.NotepadEvent.Empty -> {
-            }
-            is NotepadViewModel.NotepadEvent.SuccessAddDelete -> {
-                if (!viewModel.isHandled) {
-                    viewModel.isHandled = true
-                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
-                    loadingState.value = false
-                }
-            }
-            is NotepadViewModel.NotepadEvent.Failure -> {
-                if (!viewModel.isHandled) {
-                    viewModel.isHandled = true
-                    loadingState.value = false
-                    Toast.makeText(LocalContext.current, it.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-            is NotepadViewModel.NotepadEvent.Loading -> {
-                viewModel.isHandled = false
-                loadingState.value = true
-            }
-            NotepadViewModel.NotepadEvent.Logout -> {
-                Toast.makeText(LocalContext.current, DELETED_LABEL, Toast.LENGTH_SHORT).show()
-                navController.navigate(NAVIGATION_WELCOME_SCREEN)
             }
         }
+        is NotepadViewModel.NotepadEvent.Failure -> {
+            if (!viewModel.isHandled) {
+                viewModel.isHandled = true
+                loadingState.value = false
+                Toast.makeText(LocalContext.current, eventHandler.message, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+        is NotepadViewModel.NotepadEvent.Loading -> {
+            viewModel.isHandled = false
+            loadingState.value = true
+        }
+        NotepadViewModel.NotepadEvent.Logout -> {
+            Toast.makeText(LocalContext.current, DELETED_LABEL, Toast.LENGTH_SHORT).show()
+            navController.navigate(NAVIGATION_WELCOME_SCREEN)
+        }
+
 
     }
 
@@ -147,7 +149,7 @@ fun NotepadScreen(userUID: String, viewModel: NotepadViewModel, navController: N
                     inputTextLambda = inputTextLambda,
                     buttonAddNoteOnClickListener = buttonAddNoteOnClickListener,
                     addImageOnClickListener = addImageOnClickListener,
-                    logoutOnClickListener = logoutOnClickListener,
+                    logoutOnClickListener = { viewModel.logout() },
                     imgUri = imageUri
                 )
             }
@@ -380,3 +382,7 @@ fun NoteCardView(note: Notes, deleteLambda: (Notes) -> Unit) {
     }
 }
 
+data class SomeClass(
+    val name: String,
+    val id: String,
+) : Serializable

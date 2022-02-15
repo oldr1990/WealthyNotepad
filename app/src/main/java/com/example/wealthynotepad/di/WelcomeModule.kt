@@ -15,17 +15,16 @@ import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import javax.inject.Singleton
 
 @Module
-@InstallIn(ApplicationComponent::class)
+@InstallIn(SingletonComponent::class)
 object WelcomeModule {
 
-    @Singleton
     @Provides
     fun provideFirebaseFirestore(): FirebaseFirestoreAPI =
         object : FirebaseFirestoreAPI {
@@ -42,7 +41,7 @@ object WelcomeModule {
         }
     }
 
-    @Singleton
+
     @Provides
     fun provideFirebaseAuthObj(): FirebaseAuthAPI = object : FirebaseAuthAPI {
         override fun auth(): FirebaseAuth {
@@ -50,7 +49,7 @@ object WelcomeModule {
         }
     }
 
-    @Singleton
+
     @Provides
     fun provideFirebaseAuth(
         api: FirebaseAuthAPI,
@@ -60,7 +59,7 @@ object WelcomeModule {
     ): FirebaseRepository =
         DefaultFirebaseRepository(api, firestore, sharedPreferences,dispatcher )
 
-    @Singleton
+
     @Provides
     fun provideDispatchers(): DispatcherProvider = object : DispatcherProvider {
         override val main: CoroutineDispatcher

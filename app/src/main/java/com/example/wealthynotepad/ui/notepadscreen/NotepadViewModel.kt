@@ -1,8 +1,6 @@
 package com.example.wealthynotepad.ui.notepadscreen
 
-import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wealthynotepad.data.Constants
@@ -10,12 +8,13 @@ import com.example.wealthynotepad.data.Constants.ERROR_DATE
 import com.example.wealthynotepad.data.Notes
 import com.example.wealthynotepad.repository.FirebaseRepository
 import com.example.wealthynotepad.util.DispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class NotepadViewModel @ViewModelInject constructor(
+@HiltViewModel
+class NotepadViewModel @Inject constructor(
     private val firebaseRepository: FirebaseRepository,
     private val dispatcher: DispatcherProvider
 ) : ViewModel() {
@@ -34,9 +33,6 @@ class NotepadViewModel @ViewModelInject constructor(
 
     var isHandled = false
 
-    private val _listOfNotes = MutableStateFlow(listOf(Notes()))
-    val listOfNotes: StateFlow<List<Notes>> = _listOfNotes
-
     private val _noteCallBack = MutableStateFlow<NotepadEvent>(NotepadEvent.Empty)
     val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
 
@@ -52,7 +48,6 @@ class NotepadViewModel @ViewModelInject constructor(
                         is NotesResource.Success -> {
                             if (response.data != null) {
                                 val list = response.data.sortedByDescending{ it.date }
-                                _listOfNotes.value = list
                                 _noteCallBack.value = NotepadEvent.Success(list)
                             }
                         }
