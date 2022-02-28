@@ -1,8 +1,6 @@
 package com.example.wealthynotepad.data
 
 object Constants {
-    const val NAVIGATION_WELCOME_SCREEN = "welcome_screen"
-    const val NAVIGATION_NOTEPAD_SCREEN = "notepad_screen/"
 
     const val FIRESTORE_FIELD_NOTE_TABLE = "notes"
     const val FIRESTORE_FIELD_USER_ID = "userUID"

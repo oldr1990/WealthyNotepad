@@ -1,7 +1,5 @@
 package com.example.wealthynotepad.ui.welcomescreen
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,77 +8,46 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.wealthynotepad.R
 import com.example.wealthynotepad.data.Constants
 import com.example.wealthynotepad.data.UserEntries
+import com.example.wealthynotepad.navigation.Routes
 import com.example.wealthynotepad.ui.composes.LoadingCircle
-import com.example.wealthynotepad.util.isItEmail
+import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
-    val eventHandler = viewModel.loginFlow.collectAsState()
+fun WelcomeScreen(navController: NavController, viewModel: WelcomeViewModel = hiltViewModel()) {
+    val state = viewModel.loginFlow.value
     val email = rememberSaveable { mutableStateOf("") }
     val password = rememberSaveable { mutableStateOf("") }
-    val loading = rememberSaveable { mutableStateOf(false) }
+    val scaffoldState = rememberScaffoldState()
 
     val emailLambda: (String) -> Unit = { it -> email.value = it }
     val passwordLambda: (String) -> Unit = { it -> password.value = it }
 
-    val registerClickListener: () -> Unit = {
-        if (isItEmail(email.value)) {
-            if (password.value.length in 4..10) {
-                viewModel.register(
-                    UserEntries(
-                        email = email.value,
-                        password = password.value,
-                    )
+
+    LaunchedEffect(key1 = true) {
+        viewModel.snackbarEvent.collectLatest { message ->
+            if (message.isNotEmpty()) {
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = message
                 )
             }
         }
     }
-    val loginClickListener: () -> Unit = {
-        if (isItEmail(email.value)) {
-            if (password.value.length in 4..10) {
-                viewModel.login(
-                    UserEntries(
-                        email = email.value,
-                        password = password.value,
-                    )
-                )
-            }
-        } else {
-            Log.e("!@#", Constants.ERROR_INVALID_EMAIL)
-        }
-    }
 
-    eventHandler.value.let { response ->
-        when (response) {
-            is LoginEvent.Success -> {
-                loading.value = false
-                navController.navigate("notepad_screen/${response.uid}")
-            }
-            is LoginEvent.Empty -> {
-                loading.value = false
-            }
-            is LoginEvent.Loading -> {
-                loading.value = true
-            }
-            is LoginEvent.Failure -> {
-                Toast.makeText(LocalContext.current, response.errorText, Toast.LENGTH_SHORT).show()
-                loading.value = false
-            }
-        }
-    }
-
-    Box {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(text = "Welcome Screen") }) },
+        scaffoldState = scaffoldState
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -93,32 +60,50 @@ fun WelcomeScreen(viewModel: WelcomeVIewModel, navController: NavController) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth(1f)
-                    .padding(15.dp),
+                    .padding(16.dp),
                 shape = RoundedCornerShape(10.dp),
                 elevation = 5.dp,
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(15.dp)
+                    modifier = Modifier.padding(16.dp)
                 ) {
                     TopLabel(Constants.LOGIN_REGISTER_LABEL)
-                    RegisterData(Constants.EMAIL_LABEL, text = email, emailLambda)
-                    RegisterData(Constants.PASSWORD_LABEL, text = password, passwordLambda)
+                    RegisterData(Constants.EMAIL_LABEL, text = email, emailLambda, state.emailError)
+                    RegisterData(
+                        Constants.PASSWORD_LABEL,
+                        text = password,
+                        passwordLambda,
+                        state.passwordError
+                    )
                     Row(
                         modifier = Modifier
                             .padding(15.dp)
                             .fillMaxWidth(1f),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        ButtonLogReg(label = Constants.LOGIN_LABEL, loginClickListener)
+                        ButtonLogReg(Constants.LOGIN_LABEL) {
+                            viewModel.login(
+                                UserEntries(email = email.value, password = password.value)
+                            )
+                        }
                         Spacer(modifier = Modifier.padding(15.dp))
-                        ButtonLogReg(label = Constants.REGISTRATION_LABEL, registerClickListener)
+                        ButtonLogReg(Constants.REGISTRATION_LABEL) {
+                            viewModel.register(
+                                UserEntries(email = email.value, password = password.value)
+                            )
+                        }
                     }
                 }
 
             }
         }
-        LoadingCircle(state = loading)
+        LoadingCircle(state = state.isLoading)
+        if (state.userUID.isNotEmpty()) {
+            navController.navigate(Routes.Notepad + state.userUID) {
+                launchSingleTop = true
+            }
+        }
     }
 }
 
@@ -128,18 +113,24 @@ fun TopLabel(text: String) {
 }
 
 @Composable
-fun RegisterData(label: String, text: MutableState<String>, typeObserver: (String) -> Unit) {
+fun RegisterData(
+    label: String,
+    text: MutableState<String>,
+    typeObserver: (String) -> Unit,
+    error: Boolean
+) {
     val transformation: VisualTransformation =
         if (label == Constants.PASSWORD_LABEL) PasswordVisualTransformation()
         else VisualTransformation.None
     OutlinedTextField(
+        modifier = Modifier.padding(vertical = 8.dp),
         value = text.value,
         onValueChange = typeObserver,
         singleLine = true,
         label = { Text(text = label) },
         visualTransformation = transformation,
-
-        )
+        isError = error
+    )
 }
 
 @Composable

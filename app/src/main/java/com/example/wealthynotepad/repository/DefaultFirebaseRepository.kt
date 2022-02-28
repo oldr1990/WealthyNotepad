@@ -5,25 +5,20 @@ import com.example.wealthynotepad.data.*
 import com.example.wealthynotepad.data.Constants.EMAIL_LABEL
 import com.example.wealthynotepad.data.Constants.EMPTY_STRING
 import com.example.wealthynotepad.data.Constants.PASSWORD_LABEL
-import com.example.wealthynotepad.util.DispatcherProvider
-import com.example.wealthynotepad.ui.welcomescreen.LoginResource
-import com.example.wealthynotepad.ui.notepadscreen.NotesResource
+import com.example.wealthynotepad.ui.welcomescreen.NetworkResponse
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.tasks.await
+import okhttp3.internal.wait
 import javax.inject.Inject
 import kotlin.Exception
 
 class DefaultFirebaseRepository @Inject constructor(
-    private val authApi: FirebaseAuthAPI,
-    private val firestoreAPI: FirebaseFirestoreAPI,
-    private val sharedPreferencesAPI: SharedPreferencesAPI,
-    private val dispatcher: DispatcherProvider
+    authApi: FirebaseAuthAPI,
+    firestoreAPI: FirebaseFirestoreAPI,
+    sharedPreferencesAPI: SharedPreferencesAPI
 ) :
     FirebaseRepository {
     private val sharedPreferences = sharedPreferencesAPI.sharedPreferences
@@ -32,49 +27,33 @@ class DefaultFirebaseRepository @Inject constructor(
     private val storage = Firebase.storage
     private val storageReference = storage.reference
 
-    private val _authCallBack = MutableStateFlow<LoginResource<Boolean>>(LoginResource.Empty())
-    override val authCallBack: StateFlow<LoginResource<Boolean>> = _authCallBack
-
-    private val _notepadCallBack = MutableStateFlow<NotesResource<Notes>>(NotesResource.Empty())
-    override val notepadCallBack: MutableStateFlow<NotesResource<Notes>> = _notepadCallBack
-
-    override suspend fun registerUser(userdata: UserEntries) {
+    override suspend fun registerUser(userData: UserEntries): Flow<NetworkResponse<String>> = flow {
         try {
-            CoroutineScope(dispatcher.io).launch {
-                auth.createUserWithEmailAndPassword(userdata.email, userdata.password)
-                    .addOnCompleteListener {
-                        if (it.isSuccessful) CoroutineScope(Dispatchers.IO).launch {
-                            _authCallBack.value =
-                                LoginResource.Success(auth.currentUser?.uid ?: "Error!")
-                        }
-                        else _authCallBack.value =
-                            LoginResource.Error(it.exception?.message.toString())
-                    }
-
+            val result = auth.createUserWithEmailAndPassword(userData.email, userData.password)
+                .addOnCompleteListener {}
+            result.await()
+            if (result.isSuccessful) {
+                emit(NetworkResponse.Success(auth.currentUser?.uid ?: "Error!"))
+            } else {
+                emit(NetworkResponse.Error(result.exception?.message ?: "Error!"))
             }
-
         } catch (e: Exception) {
-
-            _authCallBack.value = LoginResource.Error(e.message.toString())
+            emit(NetworkResponse.Error(e.message.toString()))
         }
     }
 
-    override suspend fun loginUser(userdata: UserEntries) {
+    override suspend fun loginUser(userData: UserEntries): Flow<NetworkResponse<String>> = flow {
         try {
-            CoroutineScope(dispatcher.io).launch {
-                auth.signInWithEmailAndPassword(userdata.email, userdata.password)
-                    .addOnCompleteListener {
-                        _authCallBack.value =  if (it.isSuccessful) {
-                            LoginResource.Success(
-                                auth.currentUser?.uid ?: Constants.ERROR_YOU_ARE_NOT_AUTHORIZED)
-                        }
-                        else {
-                            LoginResource.Error(it.exception?.message.toString())
-                        }
-                    }
+            val result = auth.signInWithEmailAndPassword(userData.email, userData.password)
+                .addOnCompleteListener {}
+            result.await()
+            if (result.isSuccessful) {
+                emit(NetworkResponse.Success(auth.currentUser?.uid ?: "No uid in response!"))
+            } else {
+                emit(NetworkResponse.Error(result.exception?.message ?: "Error from server!"))
             }
         } catch (e: Exception) {
-            _authCallBack.value = LoginResource.Error(e.message.toString())
+            emit(NetworkResponse.Error(e.message ?: "Exception error!"))
         }
     }
 
@@ -82,7 +61,7 @@ class DefaultFirebaseRepository @Inject constructor(
         return auth.currentUser != null
     }
 
-    override suspend fun logout() {
+    override suspend fun logout(): Flow<NetworkResponse<Unit>> = flow {
         auth.signOut()
         if (!checkLoginState()) {
             sharedPreferences.edit().apply {
@@ -90,111 +69,123 @@ class DefaultFirebaseRepository @Inject constructor(
                 this.putString(PASSWORD_LABEL, EMPTY_STRING)
                 apply()
             }
-            _authCallBack.value  = LoginResource.Empty()
-            _notepadCallBack.value = NotesResource.Logout()
+            emit(NetworkResponse.Success(Unit))
+        } else {
+            emit(NetworkResponse.Error(Unit))
         }
     }
 
-    override suspend fun addNote(note: Notes) {
+    override suspend fun addNote(note: Notes): Flow<NetworkResponse<String>> = flow {
         try {
-            if (auth.currentUser != null) {
-                note.userUID = auth.currentUser?.uid.toString()
-                note.img = imageUploader(note.img)
-                firestore.add(note)
-                    .addOnSuccessListener {
-                        _notepadCallBack.value = NotesResource.SuccessAdd()
+            if (auth.currentUser == null) {
+                emit(NetworkResponse.Error("You are not authorized!"))
+            }
+            note.userUID = auth.currentUser?.uid.toString()
+            imageUploader(note.img).collect {
+                when (it) {
+                    is NetworkResponse.Error -> {
+                        emit(it)
                     }
-                    .addOnFailureListener {
-                        _notepadCallBack.value = NotesResource.Error(it.message.toString())
+                    is NetworkResponse.Success -> {
+                        val response = firestore.add(note.copy(img = it.data)).addOnCompleteListener { }
+                        response.await()
+                        if (response.isSuccessful) {
+                            emit(NetworkResponse.Success("Successful added"))
+                        } else {
+                            emit(NetworkResponse.Error(response.exception?.message ?: "Error"))
+                        }
                     }
-            } else throw Exception(Constants.ERROR_YOU_ARE_NOT_AUTHORIZED)
+                }
+            }
         } catch (e: Exception) {
-            _notepadCallBack.value = NotesResource.Error(e.message.toString())
+            emit(NetworkResponse.Error(e.message ?: "Error"))
         }
     }
 
-    private suspend fun imageUploader(filename: String): String {
-        var url = EMPTY_STRING
-        if (filename == EMPTY_STRING) return url
+    private suspend fun imageUploader(filename: String): Flow<NetworkResponse<String>> = flow {
         try {
+            if (filename.isEmpty()) {
+                emit(NetworkResponse.Success(""))
+                return@flow
+            }
             val ref = storageReference
                 .child(Constants.FIRESTORE_IMAGE_DIRECTORY + filename.hashCode().toString())
             val uploadTask = ref.putFile(filename.toUri())
-            uploadTask.continueWithTask { task ->
+            uploadTask.await()
+            val task = uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {
                     task.exception?.let {
                         throw it
                     }
                 }
                 ref.downloadUrl
+            }.addOnCompleteListener {}
+            task.await()
+            if (task.isSuccessful) {
+                emit(NetworkResponse.Success(task.result.toString()))
+                return@flow
+            } else {
+                emit(NetworkResponse.Error(Constants.ERROR_IMAGE_UPLOADING))
+                return@flow
             }
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        url = task.result.toString()
-                    } else {
-                        _notepadCallBack.value =
-                            NotesResource.Error(Constants.ERROR_IMAGE_UPLOADING)
-                    }
-                }.await()
-
         } catch (e: Exception) {
-            _notepadCallBack.value = NotesResource.Error(e.message.toString())
-            return url
+            emit(NetworkResponse.Error(e.message.toString()))
+            return@flow
         }
-        return url
     }
 
-    override suspend fun deleteNote(note: Notes) {
-        if (deleteImage(note.img))
-            firestore
-                .whereEqualTo(Constants.FIRESTORE_FIELD_DATE, note.date)
-                .whereEqualTo(Constants.FIRESTORE_FIELD_IMG_URL, note.img)
-                .whereEqualTo(Constants.FIRESTORE_FIEL_TEXT, note.text)
-                .whereEqualTo(Constants.FIRESTORE_FIELD_USER_ID, note.userUID).get()
-                .addOnSuccessListener {
-                    if (!it.isEmpty) {
-                        firestore.document(it.documents[0].id).delete().addOnSuccessListener {
-                            _notepadCallBack.value = NotesResource.SuccessDelete()
-                        }
-                            .addOnFailureListener { e->
-                                _notepadCallBack.value =
-                                    NotesResource.Error(e.message.toString())
-                            }
-                    } else _notepadCallBack.value =
-                        NotesResource.Error(Constants.ERROR_NOTE_CANT_FIND_NOTE)
-                }
-    }
-
-    private suspend fun deleteImage(url: String): Boolean {
-        if (url == EMPTY_STRING) return true
-        var isDeleted = false
-        val imageReference = storage.getReferenceFromUrl(url)
+    override suspend fun deleteNote(note: Notes): Flow<NetworkResponse<String>> = flow {
         try {
-            imageReference.delete().addOnCompleteListener {
-                if (it.isSuccessful) isDeleted = true
+            if (deleteImage(note.img)) {
+                val response = firestore
+                    .whereEqualTo(Constants.FIRESTORE_FIELD_DATE, note.date)
+                    .whereEqualTo(Constants.FIRESTORE_FIELD_IMG_URL, note.img)
+                    .whereEqualTo(Constants.FIRESTORE_FIEL_TEXT, note.text)
+                    .whereEqualTo(Constants.FIRESTORE_FIELD_USER_ID, note.userUID).get()
+                    .addOnSuccessListener {}
+                response.await()
+                if (response.result?.isEmpty != true) {
+                    val deleteResponse =
+                        firestore.document(response.result!!.documents[0].id).delete()
+                            .addOnSuccessListener {}
+                    deleteResponse.await()
+                    if (deleteResponse.isSuccessful) {
+                        emit(NetworkResponse.Success("Item was successfully deleted!"))
+                    } else {
+                        emit(NetworkResponse.Error(deleteResponse.exception?.message ?: "Error"))
+                    }
+                } else emit(NetworkResponse.Error(response.exception?.message ?: "Error"))
             }
-                .await()
         } catch (e: Exception) {
-            isDeleted = false
-            _notepadCallBack.value = NotesResource.Error(e.message.toString())
+            emit(NetworkResponse.Error(e.message ?: "Error"))
         }
-        return isDeleted
     }
 
-    override suspend fun getNotes(uid: String) {
+    private fun deleteImage(url: String): Boolean {
+        if (url.isEmpty()) return true
+        return try {
+            storage
+                .getReferenceFromUrl(url)
+                .delete()
+                .addOnCompleteListener {}
+                .isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun getNotes(callBack: (NetworkResponse<List<Notes>>) -> Unit) {
         firestore
-            .whereEqualTo(Constants.FIRESTORE_FIELD_USER_ID, uid)
+            .whereEqualTo(Constants.FIRESTORE_FIELD_USER_ID, getUserUID().toString())
             .addSnapshotListener { snapshot, error ->
                 error?.let {
-                    _notepadCallBack.value = NotesResource.Error(error.message.toString())
+                    callBack(NetworkResponse.Error(emptyList()))
                     return@addSnapshotListener                                                  //останавливает слушатель
                 }
                 if (snapshot != null) {
-                    _notepadCallBack.value =
-                        NotesResource.Success(snapshot.toObjects(Notes::class.java))
+                    callBack(NetworkResponse.Success(snapshot.toObjects(Notes::class.java)))
                 }
             }
-
     }
 
 

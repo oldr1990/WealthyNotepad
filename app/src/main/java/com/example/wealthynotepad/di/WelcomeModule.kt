@@ -54,10 +54,9 @@ object WelcomeModule {
     fun provideFirebaseAuth(
         api: FirebaseAuthAPI,
         firestore: FirebaseFirestoreAPI,
-        sharedPreferences: SharedPreferencesAPI,
-        dispatcher: DispatcherProvider
+        sharedPreferences: SharedPreferencesAPI
     ): FirebaseRepository =
-        DefaultFirebaseRepository(api, firestore, sharedPreferences,dispatcher )
+        DefaultFirebaseRepository(api, firestore, sharedPreferences )
 
 
     @Provides

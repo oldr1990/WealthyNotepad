@@ -16,18 +16,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.wealthynotepad.ui.theme.HalfTransparent
 
-@Preview
-@Composable
-fun PreviewLoadingCircle() {
-    val state = remember { mutableStateOf(true) }
-    Box(modifier = Modifier.width(200.dp).height(200.dp).background(Color.Cyan), ) {
-        LoadingCircle(state = state)
-    }
-}
 
 @Composable
-fun LoadingCircle(state: MutableState<Boolean>) {
-    if (state.value) {
+fun LoadingCircle(state: Boolean) {
+    if (state) {
         Box(
             contentAlignment = Alignment.Center, modifier = Modifier
                 .fillMaxWidth(1f)

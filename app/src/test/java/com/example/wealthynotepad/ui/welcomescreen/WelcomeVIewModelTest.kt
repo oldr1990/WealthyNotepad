@@ -14,7 +14,6 @@ import com.example.wealthynotepad.data.UserEntries
 import com.example.wealthynotepad.util.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
@@ -37,13 +36,13 @@ class WelcomeVIewModelTest{
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var viewModel: WelcomeVIewModel
+    private lateinit var viewModel: WelcomeViewModel
     private val testDispatcher = TestCoroutineDispatcher()
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = WelcomeVIewModel(FakeRepository(),object : DispatcherProvider {
+        viewModel = WelcomeViewModel(FakeRepository(),object : DispatcherProvider {
             override val main: CoroutineDispatcher
                 get() = Dispatchers.Main
             override val io: CoroutineDispatcher

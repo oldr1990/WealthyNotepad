@@ -1,12 +1,14 @@
 package com.example.wealthynotepad.ui.notepadscreen
 
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.wealthynotepad.data.Constants
 import com.example.wealthynotepad.data.Constants.ERROR_DATE
 import com.example.wealthynotepad.data.Notes
 import com.example.wealthynotepad.repository.FirebaseRepository
+import com.example.wealthynotepad.ui.welcomescreen.NetworkResponse
 import com.example.wealthynotepad.util.DispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -18,90 +20,87 @@ class NotepadViewModel @Inject constructor(
     private val firebaseRepository: FirebaseRepository,
     private val dispatcher: DispatcherProvider
 ) : ViewModel() {
+    private val _state = mutableStateOf(NotepadScreenState())
+    val state: State<NotepadScreenState> = _state
 
-    sealed class NotepadEvent {
-        class Success(val notes: List<Notes>) : NotepadEvent()
-        class SuccessAddDelete(val message: String) : NotepadEvent()
-        class Failure(val message: String) : NotepadEvent()
-        object Logout: NotepadEvent()
-        object Loading : NotepadEvent()
-        object Empty : NotepadEvent()
-    }
-
-
-    private var uid: String = String()
-
-    var isHandled = false
-
-    private val _noteCallBack = MutableStateFlow<NotepadEvent>(NotepadEvent.Empty)
-    val noteCallBack: StateFlow<NotepadEvent> = _noteCallBack
+    private val _snackdbarEvent = MutableSharedFlow<String>()
+    val snackbarEvent = _snackdbarEvent.asSharedFlow()
 
     init {
-        viewModelScope.launch(dispatcher.io) {
+        viewModelScope.launch(dispatcher.main) {
             if (firebaseRepository.checkLoginState()) {
-                uid = firebaseRepository.getUserUID().toString()
-                getNotes()
-                _noteCallBack.value = NotepadEvent.Loading
-                firebaseRepository.notepadCallBack.collect { response ->
-                    isHandled = false
-                    when (response) {
-                        is NotesResource.Success -> {
-                            if (response.data != null) {
-                                val list = response.data.sortedByDescending{ it.date }
-                                _noteCallBack.value = NotepadEvent.Success(list)
-                            }
-                        }
-                        is NotesResource.SuccessAdd -> {
-                            _noteCallBack.value =
-                                NotepadEvent.SuccessAddDelete(Constants.NOTE_ADDED_LABEL)
-                        }
-                        is NotesResource.SuccessDelete -> {
-                            _noteCallBack.value =
-                                NotepadEvent.SuccessAddDelete(Constants.NOTE_DELETED_LABEL)
-                        }
-                        is NotesResource.Error -> {
-                            isHandled = false
-                            _noteCallBack.value = NotepadEvent.Failure(response.message.toString())
-                        }
-                        is NotesResource.Empty -> {}
-                        is NotesResource.Logout -> {
-                            _noteCallBack.value = NotepadEvent.Logout
+                    loadingState()
+                    firebaseRepository.getNotes{
+                        when(it){
+                            is NetworkResponse.Error -> messageState("Cant download notes")
+                            is NetworkResponse.Success -> _state.value = state.value.copy(
+                                isLoading = false,
+                                notes = it.data.sortedByDescending { item -> item.date.toBigDecimal() })
                         }
                     }
-                }
+                loadingState()
             }
-            else _noteCallBack.value = NotepadEvent.Logout
+            else {
+                logoutState()
+            }
         }
     }
 
     fun addNote(note: Notes) {
         if (note.date.toLongOrNull()!=null){
             viewModelScope.launch(dispatcher.io) {
-                _noteCallBack.value = NotepadEvent.Loading
-                firebaseRepository.addNote(note)
+                loadingState()
+                firebaseRepository.addNote(note).collectLatest {
+                    messageState(it.data)
+                }
             }
         }
-        else _noteCallBack.value = NotepadEvent.Failure(ERROR_DATE)
+        else viewModelScope.launch {
+            messageState(ERROR_DATE)
+        }
     }
 
     fun deleteNote(note: Notes) {
         viewModelScope.launch(dispatcher.io) {
-            _noteCallBack.value = NotepadEvent.Loading
-            firebaseRepository.deleteNote(note)
+            loadingState()
+            firebaseRepository.deleteNote(note).collectLatest {
+                messageState(it.data)
+            }
         }
     }
 
     fun logout(){
         viewModelScope.launch(dispatcher.io) {
-            _noteCallBack.value = NotepadEvent.Loading
-              firebaseRepository.logout()
+            loadingState()
+              firebaseRepository.logout().collectLatest {
+                  when(it){
+                      is NetworkResponse.Error -> messageState("Unexpected Error")
+                      is NetworkResponse.Success -> logoutState()
+                  }
+              }
+        }
+    }
+    private fun logoutState(){
+        _state.value = state.value.copy(
+            isLoading = false,
+            loggedOut = true
+        )
+    }
+
+    private fun messageState(msg: String){
+        viewModelScope.launch{
+            _snackdbarEvent.emit(msg)
         }
     }
 
-     private fun getNotes() {
-        viewModelScope.launch(dispatcher.io) {
-            _noteCallBack.value = NotepadEvent.Loading
-            firebaseRepository.getNotes(uid)
-        }
+    private fun loadingState(){
+        _state.value = state.value.copy( isLoading = true)
     }
+
 }
+
+data class NotepadScreenState(
+    val isLoading: Boolean = false,
+    val loggedOut: Boolean = false,
+    val notes: List<Notes> = emptyList()
+)
